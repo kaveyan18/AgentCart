@@ -48,20 +48,24 @@ export default function Nav() {
         >
           My Orders
         </NavLink>
-        <NavLink
-          to="/admin"
-          style={({ isActive }) => ({
-            ...styles.link,
-            color: isActive ? 'var(--coral)' : 'var(--ink)',
-            fontWeight: isActive ? '600' : '500'
-          })}
-        >
-          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
-            <ShieldCheck size={15} color={isMerchant ? 'var(--sage)' : 'var(--slate)'} />
-            <span>Merchant Console</span>
-            {isMerchant && <span style={styles.merchantMiniBadge}>Owner</span>}
-          </span>
-        </NavLink>
+
+        {/* Merchant Console is only visible to logged-in merchants */}
+        {isMerchant && (
+          <NavLink
+            to="/admin"
+            style={({ isActive }) => ({
+              ...styles.link,
+              color: isActive ? 'var(--coral)' : 'var(--ink)',
+              fontWeight: isActive ? '600' : '500'
+            })}
+          >
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
+              <ShieldCheck size={15} color="var(--sage)" />
+              <span>Merchant Console</span>
+              <span style={styles.merchantMiniBadge}>Owner</span>
+            </span>
+          </NavLink>
+        )}
       </div>
 
       <div style={styles.actions}>
@@ -120,14 +124,19 @@ export default function Nav() {
                     <ShoppingBag size={15} />
                     <span>My Order History</span>
                   </Link>
-                  <Link
-                    to="/admin"
-                    onClick={() => setDropdownOpen(false)}
-                    style={styles.dropdownItem}
-                  >
-                    <ShieldCheck size={15} color="var(--sage)" />
-                    <span>Merchant Console</span>
-                  </Link>
+
+                  {/* Dropdown link for Merchant Console only for merchants */}
+                  {isMerchant && (
+                    <Link
+                      to="/admin"
+                      onClick={() => setDropdownOpen(false)}
+                      style={styles.dropdownItem}
+                    >
+                      <ShieldCheck size={15} color="var(--sage)" />
+                      <span>Merchant Console</span>
+                    </Link>
+                  )}
+
                   <div style={styles.divider} />
                   <button
                     type="button"
