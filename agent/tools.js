@@ -38,10 +38,10 @@ async function getUpsellCandidates(productId) {
   }));
 }
 
-async function proposeOrder({ items, discountPercent, reason }) {
+async function proposeOrder({ items, discountPercent, reason }, context = {}) {
   const gateResult = reviewOrder({ items, discountPercent });
 
-  await writeLog('propose_order', reason || 'No reason provided', gateResult);
+  await writeLog('propose_order', reason || 'No reason provided', gateResult, context.userId || null);
 
   if (!gateResult.approved) {
     return { status: 'blocked', message: gateResult.reason };

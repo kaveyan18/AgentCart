@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useCallback } from 'react';
-import { sendChatMessage, createOrder, verifyOrderPayment, reportOrderFailure } from '../api/client';
+import { sendChatMessage, createOrder, verifyOrderPayment, reportOrderFailure, getStoredToken, getStoredUser } from '../api/client';
 
 const ChatContext = createContext(null);
 
@@ -8,7 +8,7 @@ export function ChatProvider({ children }) {
     {
       id: 'welcome',
       role: 'agent',
-      text: "👋 Hi! I'm your AgentCart assistant. Tell me what you're looking for and I'll find the best match, suggest add-ons, and help you checkout in seconds."
+      text: "👋 Hi! I'm your AgentCart electronics assistant. Tell me what tech or gear you're looking for, and I'll find matches, suggest cross-sells, and guide you through verified checkout."
     }
   ]);
   const [history, setHistory] = useState([]);
@@ -68,7 +68,7 @@ export function ChatProvider({ children }) {
         {
           id: 'error-' + Date.now(),
           role: 'agent',
-          text: 'Sorry, I had trouble connecting to the store agent. Please make sure the server is running.'
+          text: 'Sorry, I had trouble connecting to the store agent. Please make sure the backend server is running.'
         }
       ]);
     } finally {
@@ -79,6 +79,24 @@ export function ChatProvider({ children }) {
   // Razorpay Checkout Trigger
   const processCheckout = useCallback(async (items, navigate) => {
     if (!items || items.length === 0) return;
+
+    const token = getStoredToken();
+    const currentUser = getStoredUser();
+
+    if (!token) {
+      setMessages(prev => [
+        ...prev,
+        {
+          id: 'auth-required-' + Date.now(),
+          role: 'agent',
+          text: '🔐 Please sign in to your account first so this order can be linked to your profile and policy audit trail.'
+        }
+      ]);
+      if (navigate) {
+        navigate('/login?redirect=/');
+      }
+      return;
+    }
 
     const buyerNote = {
       id: 'system-' + Date.now(),
@@ -100,13 +118,13 @@ export function ChatProvider({ children }) {
         description: items.map(i => i.name).join(', '),
         theme: { color: '#F0654A' },
         prefill: {
-          name: 'Test Customer',
-          email: 'customer@example.com',
+          name: currentUser?.name || 'Customer',
+          email: currentUser?.email || 'customer@example.com',
           contact: '9999999999'
         },
         handler: async function (response) {
           try {
-            const verifyData = await verifyOrderPayment({
+            await verifyOrderPayment({
               orderId: orderData.orderId,
               razorpayPaymentId: response.razorpay_payment_id,
               razorpayOrderId: response.razorpay_order_id,

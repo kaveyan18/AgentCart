@@ -21,47 +21,53 @@ export function formatTime(iso) {
 }
 
 export const CATEGORY_THEMES = {
-  accessories: {
+  laptops: {
     bg: 'var(--sage-bg)',
     stroke: 'var(--sage)',
     catBg: 'var(--coral)',
-    label: 'Accessories'
+    label: 'Laptops'
+  },
+  smartphones: {
+    bg: 'var(--coral-bg)',
+    stroke: 'var(--coral)',
+    catBg: 'var(--coral)',
+    label: 'Smartphones'
   },
   audio: {
     bg: 'var(--pink-bg)',
     stroke: 'var(--pink)',
     catBg: 'var(--sage)',
-    label: 'Audio & Music'
+    label: 'Audio & Hi-Fi'
   },
-  charging: {
-    bg: 'var(--mustard-bg)',
-    stroke: 'var(--mustard)',
-    catBg: 'var(--pink)',
-    label: 'Chargers & Power'
-  },
-  chargers: {
-    bg: 'var(--mustard-bg)',
-    stroke: 'var(--mustard)',
-    catBg: 'var(--pink)',
-    label: 'Chargers & Power'
-  },
-  protectors: {
+  wearables: {
     bg: 'var(--lavender-bg)',
     stroke: 'var(--lavender)',
     catBg: 'var(--mustard)',
-    label: 'Screen Protectors'
+    label: 'Wearables & Watches'
   },
-  cables: {
-    bg: 'var(--lavender-bg)',
-    stroke: 'var(--lavender)',
-    catBg: 'var(--lavender)',
-    label: 'Cables'
+  cameras: {
+    bg: 'var(--mustard-bg)',
+    stroke: 'var(--mustard)',
+    catBg: 'var(--coral)',
+    label: 'Cameras & Video'
   },
   workspace: {
     bg: 'var(--sage-bg)',
     stroke: 'var(--sage)',
     catBg: 'var(--coral)',
-    label: 'Workspace'
+    label: 'Workspace & Ergonomics'
+  },
+  charging: {
+    bg: 'var(--mustard-bg)',
+    stroke: 'var(--mustard)',
+    catBg: 'var(--pink)',
+    label: 'Power & Charging'
+  },
+  accessories: {
+    bg: 'var(--cream)',
+    stroke: 'var(--slate)',
+    catBg: 'var(--coral)',
+    label: 'Accessories'
   }
 };
 

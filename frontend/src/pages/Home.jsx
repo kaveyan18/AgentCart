@@ -3,22 +3,36 @@ import {
   Smartphone,
   Headphones,
   Zap,
-  Shield,
-  Cable,
   Laptop,
   Sparkles,
   Bot,
   ShieldCheck,
   Truck,
-  RotateCcw
+  RotateCcw,
+  Watch,
+  Camera,
+  Layers,
+  LayoutGrid
 } from 'lucide-react';
 import Nav from '../components/Nav';
 import ProductCard from '../components/ProductCard';
 import { getProducts } from '../api/client';
 import { useChat } from '../context/ChatContext';
 
+const CATEGORIES = [
+  { id: 'all', label: 'All Electronics', icon: LayoutGrid },
+  { id: 'laptops', label: 'Laptops', icon: Laptop },
+  { id: 'smartphones', label: 'Smartphones', icon: Smartphone },
+  { id: 'audio', label: 'Audio & Hi-Fi', icon: Headphones },
+  { id: 'wearables', label: 'Wearables', icon: Watch },
+  { id: 'cameras', label: 'Cameras & Gear', icon: Camera },
+  { id: 'workspace', label: 'Workspace', icon: Layers },
+  { id: 'charging', label: 'Power & Charging', icon: Zap }
+];
+
 export default function Home() {
   const [products, setProducts] = useState([]);
+  const [selectedCategory, setSelectedCategory] = useState('all');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const { openChatWithPrompt } = useChat();
@@ -39,33 +53,37 @@ export default function Home() {
     fetchCatalog();
   }, []);
 
+  const filteredProducts = selectedCategory === 'all'
+    ? products
+    : products.filter(p => p.category?.toLowerCase() === selectedCategory.toLowerCase());
+
   return (
     <div className="page">
       <Nav />
 
-      {/* Hero Banner with Studio Tech Photography */}
+      {/* Hero Banner */}
       <div style={styles.hero}>
         <div style={styles.heroContent}>
           <div style={styles.heroPill}>
             <Sparkles size={13} color="var(--sage)" />
-            <span>AgentCart · AI-Powered Commerce</span>
+            <span>AgentCart · Autonomous Electronics Commerce</span>
           </div>
 
           <h1 style={styles.heroTitle}>
-            Shop, chat, checkout — all in one conversation.
+            Next-gen tech, guided by intelligent AI checkout.
           </h1>
 
           <p style={styles.heroSubtitle}>
-            Our autonomous AI agent finds the perfect accessories, applies smart merchant rules, and initiates instant Razorpay payments.
+            Browse flagship electronics or let our shopping agent find deals, assemble bundles, and complete verified Razorpay transactions with policy safety.
           </p>
 
           <div style={styles.heroBtns}>
             <button
               className="btn btn-primary"
-              onClick={() => openChatWithPrompt('I need a phone case and fast charger')}
+              onClick={() => openChatWithPrompt('I am looking for a laptop and matching accessories')}
             >
               <Bot size={16} color="#fff" />
-              <span>Ask AI Assistant</span>
+              <span>Ask AI Concierge</span>
             </button>
             <button
               className="btn btn-secondary"
@@ -73,14 +91,14 @@ export default function Home() {
                 document.getElementById('catalog-section')?.scrollIntoView({ behavior: 'smooth' });
               }}
             >
-              Browse Catalog
+              Explore Catalog ({products.length})
             </button>
           </div>
 
           <div style={styles.trustBadges}>
             <div style={styles.trustItem}>
               <ShieldCheck size={16} color="var(--sage)" />
-              <span>Gate Verified</span>
+              <span>Policy Guarded</span>
             </div>
             <div style={styles.trustItem}>
               <Truck size={16} color="var(--coral)" />
@@ -88,7 +106,7 @@ export default function Home() {
             </div>
             <div style={styles.trustItem}>
               <RotateCcw size={16} color="var(--mustard)" />
-              <span>7-Day Returns</span>
+              <span>Official Warranty</span>
             </div>
           </div>
         </div>
@@ -96,7 +114,7 @@ export default function Home() {
         <div style={styles.heroMedia}>
           <img
             src="/images/hero_banner.jpg"
-            alt="AgentCart Studio Tech Accessories"
+            alt="AgentCart Electronics"
             style={styles.heroImage}
           />
           <div style={styles.heroFloatingBadge}>
@@ -104,66 +122,44 @@ export default function Home() {
               <Bot size={18} color="#fff" />
             </div>
             <div>
-              <div style={styles.floatingTitle}>AI Concierge Online</div>
-              <div style={styles.floatingDesc}>Ready to recommend & bundle</div>
+              <div style={styles.floatingTitle}>AI Concierge Ready</div>
+              <div style={styles.floatingDesc}>Personalized recommendations & instant cart</div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Categories Bar */}
-      <div className="section-title" style={{ marginTop: '36px' }}>Shop by category</div>
-      <div style={styles.cats}>
-        <div
-          style={{ ...styles.cat, background: 'var(--coral)' }}
-          onClick={() => openChatWithPrompt('Show me iPhone 15 silicone cases')}
-        >
-          <Smartphone size={17} color="#fff" />
-          <span>Cases</span>
+      {/* Interactive Category Filter Pills */}
+      <div id="catalog-section" style={{ marginTop: '36px', marginBottom: '16px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+          <div className="section-title" style={{ margin: 0 }}>Browse by Category</div>
+          <span style={{ fontSize: '13px', color: 'var(--slate)' }}>
+            Showing {filteredProducts.length} of {products.length} products
+          </span>
         </div>
-        <div
-          style={{ ...styles.cat, background: 'var(--sage)' }}
-          onClick={() => openChatWithPrompt('What noise cancelling headphones do you have?')}
-        >
-          <Headphones size={17} color="#fff" />
-          <span>Audio</span>
-        </div>
-        <div
-          style={{ ...styles.cat, background: 'var(--pink)' }}
-          onClick={() => openChatWithPrompt('Show me GaN fast chargers')}
-        >
-          <Zap size={17} color="#fff" />
-          <span>Chargers</span>
-        </div>
-        <div
-          style={{ ...styles.cat, background: 'var(--mustard)', color: 'var(--ink)' }}
-          onClick={() => openChatWithPrompt('Show me tempered glass screen protectors')}
-        >
-          <Shield size={17} color="var(--ink)" />
-          <span>Protectors</span>
-        </div>
-        <div
-          style={{ ...styles.cat, background: 'var(--lavender)' }}
-          onClick={() => openChatWithPrompt('Show me high speed braided USB-C cables')}
-        >
-          <Cable size={17} color="#fff" />
-          <span>Cables</span>
-        </div>
-        <div
-          style={{ ...styles.cat, background: 'var(--sage-bg)', color: 'var(--ink)' }}
-          onClick={() => openChatWithPrompt('Show me ergonomic workspace accessories')}
-        >
-          <Laptop size={17} color="var(--ink)" />
-          <span>Workspace</span>
-        </div>
-      </div>
 
-      {/* Popular Products Section */}
-      <div id="catalog-section" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', marginTop: '28px' }}>
-        <div className="section-title" style={{ margin: 0 }}>Featured Gear</div>
-        <span style={{ fontSize: '13px', color: 'var(--slate)' }}>
-          {products.length} products available
-        </span>
+        <div style={styles.cats}>
+          {CATEGORIES.map(cat => {
+            const Icon = cat.icon;
+            const isSelected = selectedCategory === cat.id;
+            return (
+              <button
+                key={cat.id}
+                onClick={() => setSelectedCategory(cat.id)}
+                style={{
+                  ...styles.catBtn,
+                  background: isSelected ? 'var(--coral)' : 'var(--white)',
+                  color: isSelected ? '#ffffff' : 'var(--ink)',
+                  borderColor: isSelected ? 'var(--coral)' : 'rgba(239, 232, 218, 0.95)',
+                  boxShadow: isSelected ? '0 4px 12px rgba(240, 101, 74, 0.25)' : 'var(--shadow-sm)'
+                }}
+              >
+                <Icon size={16} color={isSelected ? '#ffffff' : 'var(--slate)'} />
+                <span>{cat.label}</span>
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {loading ? (
@@ -173,14 +169,14 @@ export default function Home() {
           <h3>Error loading products</h3>
           <p>{error}</p>
         </div>
-      ) : products.length === 0 ? (
+      ) : filteredProducts.length === 0 ? (
         <div className="empty-state">
-          <h3>No products in catalog</h3>
-          <p>Run the backend seed script to populate products.</p>
+          <h3>No products in this category</h3>
+          <p>Try selecting another category or clear your filter.</p>
         </div>
       ) : (
         <div style={styles.grid}>
-          {products.map(product => (
+          {filteredProducts.map(product => (
             <ProductCard key={product._id} product={product} />
           ))}
         </div>
@@ -224,9 +220,9 @@ const styles = {
   },
   heroTitle: {
     fontFamily: 'var(--font-brand)',
-    fontSize: '38px',
+    fontSize: '36px',
     fontWeight: '700',
-    lineHeight: 1.15,
+    lineHeight: 1.18,
     color: 'var(--ink)'
   },
   heroSubtitle: {
@@ -302,21 +298,21 @@ const styles = {
   },
   cats: {
     display: 'flex',
-    gap: '12px',
+    gap: '10px',
     marginBottom: '28px',
     flexWrap: 'wrap'
   },
-  cat: {
-    display: 'flex',
+  catBtn: {
+    display: 'inline-flex',
     alignItems: 'center',
     gap: '8px',
-    padding: '11px 18px',
-    borderRadius: '14px',
-    fontSize: '13px',
+    padding: '10px 16px',
+    borderRadius: '12px',
+    fontSize: '13.5px',
     fontWeight: '600',
-    color: '#ffffff',
     cursor: 'pointer',
-    transition: 'transform 0.15s ease, box-shadow 0.15s ease'
+    border: '1px solid',
+    transition: 'all 0.15s ease'
   },
   grid: {
     display: 'grid',

@@ -19,7 +19,7 @@ const availableFunctions = {
  * Keep calling Groq + executing tools until the model stops calling tools
  * and produces a plain text reply. Max 5 iterations to prevent runaway.
  */
-async function runAgent(userMessage, conversationHistory = []) {
+async function runAgent(userMessage, conversationHistory = [], context = {}) {
   const messages = [
     { role: 'system', content: systemPrompt },
     ...conversationHistory,
@@ -73,7 +73,7 @@ async function runAgent(userMessage, conversationHistory = []) {
         args = {};
       }
 
-      const result = await fn(args);
+      const result = await fn(args, context);
       messages.push({
         role: 'tool',
         tool_call_id: call.id,
