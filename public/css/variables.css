@@ -1,0 +1,39 @@
+/* ── Design Tokens ──────────────────────────────────────────── */
+:root {
+  /* Brand colours */
+  --cream:        #FBEFE0;
+  --white:        #FFFFFF;
+  --coral:        #F0654A;
+  --coral-dark:   #D14F36;
+  --sage:         #8FAF97;
+  --sage-bg:      #E3EEE5;
+  --pink:         #E88CA0;
+  --pink-bg:      #FBEAEE;
+  --mustard:      #E8B33D;
+  --mustard-bg:   #FBF0D9;
+  --lavender:     #9490D6;
+  --lavender-bg:  #EDEBF9;
+  --ink:          #3A3F52;
+  --ink-2:        #232838;
+  --slate:        #8A8F9E;
+  --border:       #EFE8DA;
+  --rust:         #B24A3E;
+  --rust-bg:      #F6E4E1;
+
+  /* Radius */
+  --r-sm:   8px;
+  --r-md:   14px;
+  --r-lg:   18px;
+  --r-xl:   24px;
+
+  /* Shadows */
+  --shadow-sm:  0 2px 8px  rgba(58,63,82,.06);
+  --shadow-md:  0 4px 20px rgba(58,63,82,.08);
+  --shadow-lg:  0 12px 36px rgba(58,63,82,.12);
+  --shadow-xl:  0 20px 60px rgba(58,63,82,.18);
+
+  /* Typography */
+  --font-body:  'Inter', system-ui, sans-serif;
+  --font-brand: 'Baloo 2', sans-serif;
+  --font-mono:  'IBM Plex Mono', monospace;
+}

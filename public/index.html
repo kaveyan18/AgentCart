@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AgentCart — Shop, chat, checkout</title>
+  <meta name="description" content="AgentCart: AI-powered shopping assistant. Find products, get smart recommendations, and checkout seamlessly."/>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+
+  <!-- Design system -->
+  <link rel="stylesheet" href="/css/variables.css"/>
+  <link rel="stylesheet" href="/css/reset.css"/>
+  <link rel="stylesheet" href="/css/layout.css"/>
+  <link rel="stylesheet" href="/css/components.css"/>
+
+  <!-- Screen styles -->
+  <link rel="stylesheet" href="/css/home.css"/>
+  <link rel="stylesheet" href="/css/product.css"/>
+  <link rel="stylesheet" href="/css/confirm.css"/>
+  <link rel="stylesheet" href="/css/orders.css"/>
+  <link rel="stylesheet" href="/css/admin.css"/>
+
+  <!-- Chat widget -->
+  <link rel="stylesheet" href="/css/chat.css"/>
+
+  <!-- Razorpay (must be synchronous, before our modules) -->
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+</head>
+<body>
+
+<!-- ════════════════════════════════════════════════════════════════
+     SCREEN: HOME
+     ════════════════════════════════════════════════════════════════ -->
+<div class="screen" id="screen-home">
+  <div class="page">
+
+    <nav class="consumer">
+      <div class="wordmark">Agent<span>Cart</span></div>
+      <div class="navlinks">
+        <span data-nav="home">Home</span>
+        <span data-nav="orders">My Orders</span>
+        <span data-nav="admin">Console</span>
+      </div>
+      <div class="navsearch">⌕ Search for products…</div>
+      <div class="navicons">
+        <span title="Wishlist" data-nav="orders">♡</span>
+        <span title="Cart">🛒</span>
+        <span title="Account">⚉</span>
+      </div>
+    </nav>
+
+    <!-- Hero -->
+    <div class="hero">
+      <div>
+        <div class="hero-eyebrow">AgentCart · AI-powered shopping</div>
+        <h1 class="hero-title">Shop, chat, checkout — all in one place</h1>
+      </div>
+      <div class="hero-icons">
+        <div class="hero-swatch" style="background:var(--coral);height:70px">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6"><rect x="7" y="2" width="10" height="20" rx="2"/></svg>
+        </div>
+        <div class="hero-swatch" style="background:var(--sage);height:100px">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6"><rect x="6" y="3" width="12" height="18" rx="1.5"/></svg>
+        </div>
+        <div class="hero-swatch" style="background:var(--mustard);height:70px">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6"><circle cx="8" cy="12" r="3.2"/><circle cx="16" cy="12" r="3.2"/></svg>
+        </div>
+      </div>
+    </div>
+
+    <!-- Categories -->
+    <div class="section-title">Product categories</div>
+    <div class="cats">
+      <div class="cat" style="background:var(--coral)">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6"><rect x="7" y="2" width="10" height="20" rx="2"/></svg>Cases
+      </div>
+      <div class="cat" style="background:var(--sage)">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6"><circle cx="8" cy="12" r="3.2"/><circle cx="16" cy="12" r="3.2"/></svg>Audio
+      </div>
+      <div class="cat" style="background:var(--pink)">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6"><rect x="4" y="8" width="16" height="8" rx="2"/></svg>Chargers
+      </div>
+      <div class="cat dark" style="background:var(--mustard)">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6"><rect x="6" y="3" width="12" height="18" rx="1.5"/></svg>Protectors
+      </div>
+      <div class="cat" style="background:var(--lavender)">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/></svg>Cables
+      </div>
+    </div>
+
+    <!-- Product grid (populated by products.js) -->
+    <div class="section-title">Popular right now</div>
+    <div class="product-grid" id="productGrid">
+      <div class="spinner"></div>
+    </div>
+
+  </div><!-- .page -->
+</div><!-- #screen-home -->
+
+
+<!-- ════════════════════════════════════════════════════════════════
+     SCREEN: PRODUCT DETAIL
+     ════════════════════════════════════════════════════════════════ -->
+<div class="screen" id="screen-product">
+  <div class="page">
+
+    <nav class="consumer">
+      <div class="wordmark">Agent<span>Cart</span></div>
+      <div class="navlinks">
+        <span data-nav="home">Home</span>
+        <span data-nav="orders">My Orders</span>
+        <span data-nav="admin">Console</span>
+      </div>
+      <div class="navsearch">⌕ Search for products…</div>
+      <div class="navicons"><span>♡</span><span>🛒</span><span>⚉</span></div>
+    </nav>
+
+    <!-- Detail content injected by products.js -->
+    <div class="pd-grid" id="productDetail"></div>
+
+  </div>
+</div><!-- #screen-product -->
+
+
+<!-- ════════════════════════════════════════════════════════════════
+     SCREEN: ORDER CONFIRMED / FAILED
+     ════════════════════════════════════════════════════════════════ -->
+<div class="screen" id="screen-confirm">
+  <div class="page">
+
+    <nav class="consumer">
+      <div class="wordmark">Agent<span>Cart</span></div>
+      <div class="navlinks">
+        <span data-nav="home">Home</span>
+        <span data-nav="orders">My Orders</span>
+        <span data-nav="admin">Console</span>
+      </div>
+      <div class="navsearch">⌕ Search for products…</div>
+      <div class="navicons"><span>♡</span><span>🛒</span><span>⚉</span></div>
+    </nav>
+
+    <div class="confirm-wrap">
+      <!-- Content injected by payment.js -->
+      <div class="confirm-card" id="confirmCard"></div>
+    </div>
+
+  </div>
+</div><!-- #screen-confirm -->
+
+
+<!-- ════════════════════════════════════════════════════════════════
+     SCREEN: ORDER HISTORY
+     ════════════════════════════════════════════════════════════════ -->
+<div class="screen" id="screen-orders">
+  <div class="page">
+
+    <nav class="consumer">
+      <div class="wordmark">Agent<span>Cart</span></div>
+      <div class="navlinks">
+        <span data-nav="home">Home</span>
+        <span data-nav="orders">My Orders</span>
+        <span data-nav="admin">Console</span>
+      </div>
+      <div class="navsearch">⌕ Search for products…</div>
+      <div class="navicons"><span>♡</span><span>🛒</span><span>⚉</span></div>
+    </nav>
+
+    <div class="section-title">Your orders</div>
+    <!-- Order cards injected by orders.js -->
+    <div class="orders-list" id="ordersList">
+      <div class="spinner"></div>
+    </div>
+
+  </div>
+</div><!-- #screen-orders -->
+
+
+<!-- ════════════════════════════════════════════════════════════════
+     SCREEN: MERCHANT CONSOLE (admin)
+     ════════════════════════════════════════════════════════════════ -->
+<div class="screen" id="screen-admin">
+
+  <div class="admin-nav">
+    <div class="admin-wordmark">Agent<span>Cart</span> · Merchant Console</div>
+    <button class="admin-back btn" data-nav="home">← Back to storefront</button>
+  </div>
+
+  <div class="admin-body">
+    <div class="admin-grid">
+
+      <!-- Audit log (populated by admin.js) -->
+      <div class="panel">
+        <div class="panel-title">Recent gate decisions</div>
+        <div id="auditTable"><div class="admin-loading">Loading…</div></div>
+      </div>
+
+      <!-- Policy limits (static) -->
+      <div class="panel">
+        <div class="panel-title">Policy limits</div>
+        <div class="limit-item"><span>Max order value</span>  <span class="limit-val">₹5,000</span></div>
+        <div class="limit-item"><span>Max discount</span>     <span class="limit-val">10%</span></div>
+        <div class="limit-item"><span>Payment confirmation</span><span class="limit-val">Always required</span></div>
+        <div class="limit-item"><span>Upsells per turn</span><span class="limit-val">1 max</span></div>
+      </div>
+
+    </div>
+  </div>
+
+</div><!-- #screen-admin -->
+
+
+<!-- ════════════════════════════════════════════════════════════════
+     CHAT WIDGET (fixed overlay, visible on all consumer screens)
+     ════════════════════════════════════════════════════════════════ -->
+<button class="chat-bubble" id="chatBubble" aria-label="Open chat assistant">
+  <svg viewBox="0 0 24 24" stroke-width="1.8"><path d="M4 4h16v12H8l-4 4V4z"/></svg>
+  <div class="chat-badge" id="chatBadge" aria-hidden="true">1</div>
+</button>
+
+<div class="chat-panel" id="chatPanel" role="dialog" aria-label="Chat assistant">
+
+  <div class="chat-head">
+    <div class="chat-head-info">
+      <div class="name">AgentCart AI</div>
+      <div class="status">
+        <span class="status-dot"></span>Online · powered by Groq
+      </div>
+    </div>
+    <button class="chat-close" id="chatCloseBtn" aria-label="Close chat">×</button>
+  </div>
+
+  <div class="chat-body" id="chatBody" role="log" aria-live="polite">
+    <div class="bubble agent">
+      👋 Hi! I'm your AgentCart assistant. Tell me what you're looking for and I'll find the best match, suggest add-ons, and help you checkout — all in one conversation.
+    </div>
+  </div>
+
+  <div class="chat-footer">
+    <div class="chat-input-row">
+      <input id="chatInput" type="text" placeholder="Ask me anything…" autocomplete="off" aria-label="Chat message"/>
+      <button id="chatSend" aria-label="Send">
+        <svg viewBox="0 0 24 24" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+      </button>
+    </div>
+  </div>
+
+</div><!-- .chat-panel -->
+
+<!-- App entry-point (ES module) -->
+<script type="module" src="/js/main.js"></script>
+
+</body>
+</html>

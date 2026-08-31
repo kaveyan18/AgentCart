@@ -1,0 +1,25 @@
+{
+  "name": "ai-growth-and-agentic-commerce",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "dev": "node server.js",
+    "test": "jest"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "cors": "^2.8.6",
+    "crypto": "^1.0.1",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "groq-sdk": "^1.6.0",
+    "mongoose": "^9.9.4",
+    "razorpay": "^2.9.8"
+  },
+  "devDependencies": {
+    "jest": "^30.5.0"
+  }
+}

@@ -1,0 +1,38 @@
+/* ── Order History Screen ────────────────────────────────────── */
+
+.orders-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.order-card {
+  background: var(--white);
+  border-radius: var(--r-lg);
+  padding: 18px 22px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: box-shadow .15s;
+}
+.order-card:hover { box-shadow: var(--shadow-md); }
+
+.order-left .oname {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 3px;
+}
+.order-left .odate {
+  font-size: 11.5px;
+  color: var(--slate);
+}
+
+.order-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.order-total {
+  font-size: 14px;
+  font-weight: 600;
+}

@@ -1,0 +1,101 @@
+/* ── Reusable Components ─────────────────────────────────────── */
+
+/* ── Buttons ── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: none;
+  border-radius: var(--r-md);
+  padding: 12px 20px;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background .15s, transform .15s, box-shadow .15s;
+}
+.btn:disabled { opacity: .55; cursor: not-allowed; transform: none !important; }
+
+.btn-primary {
+  background: var(--coral);
+  color: #fff;
+}
+.btn-primary:hover:not(:disabled) {
+  background: var(--coral-dark);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(240,101,74,.35);
+}
+
+.btn-secondary {
+  background: var(--cream);
+  color: var(--ink);
+}
+.btn-secondary:hover:not(:disabled) {
+  background: var(--border);
+}
+
+.btn-full { width: 100%; }
+
+/* ── Status Pills ── */
+.pill {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 5px 12px;
+  border-radius: 20px;
+}
+.pill.paid    { background: var(--sage-bg);   color: #3A6B45; }
+.pill.failed  { background: var(--rust-bg);   color: var(--rust); }
+.pill.created { background: var(--mustard-bg); color: #7A5D10; }
+.pill.ok      { background: var(--sage-bg);   color: #3A6B45; }
+.pill.error   { background: var(--rust-bg);   color: var(--rust); }
+
+/* ── Loading Spinner ── */
+.spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid var(--border);
+  border-top-color: var(--coral);
+  border-radius: 50%;
+  animation: spin .7s linear infinite;
+  margin: 40px auto;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Empty State ── */
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--slate);
+}
+.empty-state h3 {
+  font-family: var(--font-brand);
+  font-size: 18px;
+  color: var(--ink);
+  margin-bottom: 8px;
+}
+.empty-state p { font-size: 13px; }
+
+/* ── Star Rating ── */
+.stars {
+  color: var(--mustard);
+  font-size: 11px;
+  letter-spacing: 1px;
+  margin-bottom: 4px;
+}
+
+/* ── Product Thumbnail ── */
+.thumb {
+  border-radius: var(--r-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+.thumb svg { flex-shrink: 0; }
+
+/* ── Bubble-In Animation (shared) ── */
+@keyframes bubbleIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: none; }
+}

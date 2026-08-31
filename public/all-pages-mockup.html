@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Parcel — full page mockups</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --cream:#FBEFE0; --white:#FFFFFF;
+    --coral:#F0654A; --coral-dark:#D14F36;
+    --sage:#8FAF97; --sage-bg:#E3EEE5;
+    --pink:#E88CA0; --pink-bg:#FBEAEE;
+    --mustard:#E8B33D; --mustard-bg:#FBF0D9;
+    --lavender:#9490D6; --lavender-bg:#EDEBF9;
+    --ink:#3A3F52; --ink-2:#232838; --slate:#8A8F9E; --border:#EFE8DA;
+    --rust:#B24A3E; --rust-bg:#F6E4E1;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--cream);font-family:'Inter',sans-serif;color:var(--ink);}
+
+  .switcher{
+    position:sticky;top:0;z-index:50;background:var(--white);border-bottom:1px solid var(--border);
+    display:flex;gap:6px;padding:10px 20px;flex-wrap:wrap;
+  }
+  .switcher button{
+    font-family:'Inter',sans-serif;font-size:12.5px;font-weight:600;color:var(--ink);
+    background:var(--cream);border:none;border-radius:10px;padding:8px 14px;cursor:pointer;
+  }
+  .switcher button.active{background:var(--coral);color:#fff;}
+
+  .screen{display:none;}
+  .screen.active{display:block;}
+  .page{max-width:1320px;margin:0 auto;padding:24px 28px;}
+
+  nav.consumer{display:flex;align-items:center;justify-content:space-between;background:var(--white);border-radius:20px;padding:14px 24px;margin-bottom:24px;}
+  .wordmark{font-family:'Baloo 2',sans-serif;font-size:22px;font-weight:700;color:var(--ink);}
+  .navlinks{display:flex;gap:26px;font-size:14px;font-weight:500;}
+  .search{background:var(--cream);border-radius:12px;padding:9px 16px;font-size:13px;color:var(--slate);width:240px;}
+  .navicons{display:flex;gap:16px;font-size:16px;}
+
+  .sectiontitle{font-family:'Baloo 2',sans-serif;font-size:22px;font-weight:600;margin-bottom:16px;}
+  h1.herotitle{font-family:'Baloo 2',sans-serif;font-size:32px;font-weight:700;line-height:1.15;}
+
+  .hero{background:var(--sage-bg);border-radius:24px;padding:36px 40px;margin-bottom:28px;display:flex;align-items:center;justify-content:space-between;}
+  .heroeyebrow{font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:var(--sage);font-weight:600;margin-bottom:8px;}
+  .heroicons{display:flex;gap:12px;align-items:flex-end;}
+  .heroicons .swatch{width:60px;height:80px;border-radius:14px;display:flex;align-items:center;justify-content:center;}
+  .heroicons svg{width:24px;height:24px;stroke:#fff;}
+  .cats{display:flex;gap:12px;margin-bottom:28px;flex-wrap:wrap;}
+  .cat{display:flex;align-items:center;gap:10px;padding:11px 16px;border-radius:14px;font-size:13px;font-weight:600;color:#fff;}
+  .cat svg{width:16px;height:16px;stroke:#fff;}
+  .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;}
+  .product{background:var(--white);border-radius:18px;padding:12px;cursor:pointer;}
+  .thumb{height:120px;border-radius:14px;display:flex;align-items:center;justify-content:center;margin-bottom:12px;position:relative;}
+  .thumb svg{width:40px;height:40px;}
+  .stars{color:var(--mustard);font-size:11px;margin-bottom:4px;letter-spacing:1px;}
+  .pname{font-size:14px;font-weight:600;margin-bottom:2px;}
+  .pprice{font-size:13px;color:var(--slate);font-weight:500;}
+
+  .pd{display:grid;grid-template-columns:440px 1fr;gap:36px;background:var(--white);border-radius:24px;padding:32px;}
+  .pdimg{background:var(--sage-bg);border-radius:18px;height:380px;display:flex;align-items:center;justify-content:center;}
+  .pdimg svg{width:110px;height:110px;stroke:var(--sage);}
+  .pdname{font-family:'Baloo 2',sans-serif;font-size:26px;font-weight:600;margin-bottom:6px;}
+  .pdmeta{font-size:12.5px;color:var(--slate);margin-bottom:14px;}
+  .pdprice{font-family:'Baloo 2',sans-serif;font-size:28px;color:var(--coral-dark);margin-bottom:18px;}
+  .pddesc{font-size:13.5px;line-height:1.7;color:var(--ink);margin-bottom:22px;}
+  .pdbtns{display:flex;gap:12px;margin-bottom:28px;}
+  .btn-primary{background:var(--coral);color:#fff;border:none;border-radius:12px;padding:13px 22px;font-size:13.5px;font-weight:600;cursor:pointer;}
+  .btn-secondary{background:var(--cream);color:var(--ink);border:none;border-radius:12px;padding:13px 22px;font-size:13.5px;font-weight:600;cursor:pointer;}
+  .relatedtitle{font-size:12px;font-weight:600;color:var(--slate);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:10px;}
+  .relatedrow{display:flex;gap:12px;}
+  .relatedcard{background:var(--cream);border-radius:12px;padding:10px;width:130px;}
+  .relatedcard .thumb{height:60px;margin-bottom:8px;}
+  .relatedcard svg{width:22px;height:22px;}
+  .relatedcard .pname{font-size:11.5px;}
+  .relatedcard .pprice{font-size:11px;}
+
+  .confirmwrap{display:flex;justify-content:center;padding:60px 0;}
+  .confirmcard{background:var(--white);border-radius:24px;padding:40px;width:460px;text-align:center;}
+  .checkicon{width:60px;height:60px;border-radius:50%;background:var(--sage);display:flex;align-items:center;justify-content:center;margin:0 auto 18px;}
+  .checkicon svg{width:28px;height:28px;stroke:#fff;stroke-width:2.4;}
+  .confirmtitle{font-family:'Baloo 2',sans-serif;font-size:22px;font-weight:600;margin-bottom:6px;}
+  .confirmsub{font-size:12.5px;color:var(--slate);margin-bottom:24px;}
+  .orderid{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--slate);margin-bottom:22px;}
+  .itemsrow{display:flex;justify-content:space-between;font-size:13px;padding:8px 0;border-bottom:1px solid var(--border);text-align:left;}
+  .totalrow{display:flex;justify-content:space-between;font-size:16px;font-weight:600;padding:14px 0 22px;text-align:left;}
+  .contbtn{width:100%;}
+
+  .orderslist{display:flex;flex-direction:column;gap:14px;}
+  .ordercard{background:var(--white);border-radius:16px;padding:18px 22px;display:flex;justify-content:space-between;align-items:center;}
+  .orderleft .oname{font-size:14px;font-weight:600;margin-bottom:3px;}
+  .orderleft .odate{font-size:11.5px;color:var(--slate);}
+  .orderright{display:flex;align-items:center;gap:16px;}
+  .ototal{font-size:14px;font-weight:600;}
+  .pill{font-size:11px;font-weight:600;padding:5px 12px;border-radius:20px;}
+  .pill.paid{background:var(--sage-bg);color:#3A6B45;}
+  .pill.failed{background:var(--rust-bg);color:var(--rust);}
+
+  .chatbubble{
+    position:fixed;bottom:26px;right:26px;width:58px;height:58px;border-radius:50%;background:var(--coral);
+    display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:100;
+  }
+  .chatbubble svg{width:26px;height:26px;stroke:#fff;}
+  .chatpanel{
+    position:fixed;bottom:96px;right:26px;width:360px;height:500px;background:var(--white);border-radius:20px;
+    display:none;flex-direction:column;overflow:hidden;z-index:100;border:1px solid var(--border);
+  }
+  .chatpanel.open{display:flex;}
+  .chathead{background:var(--ink-2);color:#fff;padding:16px 18px;display:flex;justify-content:space-between;align-items:center;}
+  .chathead .t{font-family:'Baloo 2',sans-serif;font-size:15px;font-weight:600;}
+  .chathead .s{font-size:11px;color:var(--sage);display:flex;align-items:center;gap:6px;margin-top:2px;}
+  .chathead .dot{width:6px;height:6px;border-radius:50%;background:var(--sage);display:inline-block;}
+  .chathead .close{cursor:pointer;font-size:18px;opacity:0.7;}
+  .chatbody{flex:1;padding:14px 16px;display:flex;flex-direction:column;gap:10px;overflow-y:auto;}
+  .bubble{max-width:85%;font-size:12.5px;line-height:1.5;padding:9px 13px;border-radius:14px;}
+  .buyer{align-self:flex-end;background:var(--coral);color:#fff;border-bottom-right-radius:4px;}
+  .agent{align-self:flex-start;background:var(--cream);border-bottom-left-radius:4px;}
+  .upsell{align-self:flex-start;max-width:88%;background:var(--mustard-bg);border-radius:12px;padding:9px 11px;display:flex;gap:9px;align-items:center;}
+  .upsell .uicon{width:28px;height:28px;flex-shrink:0;background:var(--mustard);border-radius:8px;display:flex;align-items:center;justify-content:center;}
+  .upsell .uicon svg{width:14px;height:14px;stroke:#fff;}
+  .uname{font-size:11.5px;font-weight:600;}
+  .ureason{font-size:10px;color:var(--slate);}
+  .gatecard{background:var(--cream);border-radius:14px;padding:12px 14px;}
+  .gaterow{display:flex;justify-content:space-between;font-size:11.5px;padding:2px 0;color:var(--slate);}
+  .gatetotal{display:flex;justify-content:space-between;font-size:13px;font-weight:600;padding-top:6px;margin-top:5px;border-top:1px solid var(--border);}
+  .confirmbtn{margin-top:10px;width:100%;background:var(--coral);color:#fff;border:none;padding:11px;font-size:12.5px;font-weight:600;border-radius:11px;cursor:pointer;}
+
+  .adminnav{background:var(--ink-2);color:#fff;padding:16px 32px;display:flex;justify-content:space-between;align-items:center;}
+  .adminwordmark{font-family:'Baloo 2',sans-serif;font-size:18px;font-weight:600;}
+  .adminback{font-size:12px;color:var(--sage);cursor:pointer;}
+  .adminbody{padding:28px 32px;}
+  .admingrid{display:grid;grid-template-columns:1fr 300px;gap:24px;}
+  .panel{background:var(--white);border-radius:18px;padding:22px;}
+  .paneltitle{font-family:'Baloo 2',sans-serif;font-size:16px;font-weight:600;margin-bottom:16px;}
+  table{width:100%;border-collapse:collapse;}
+  th{font-size:10.5px;text-transform:uppercase;letter-spacing:0.05em;color:var(--slate);text-align:left;padding:8px 6px;border-bottom:1px solid var(--border);}
+  td{font-size:12.5px;padding:10px 6px;border-bottom:1px solid var(--border);}
+  td.mono{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--slate);}
+  .limititem{display:flex;justify-content:space-between;font-size:13px;padding:10px 0;border-bottom:1px solid var(--border);}
+  .limititem:last-child{border-bottom:none;}
+  .limitval{font-weight:600;color:var(--coral-dark);}
+</style>
+</head>
+<body>
+
+<div class="switcher" id="switcher"></div>
+
+<div class="screen active" id="screen-home">
+  <div class="page">
+    <nav class="consumer">
+      <div class="wordmark">parcel</div>
+      <div class="navlinks"><span>Home</span><span>Product</span><span>Help</span><span>Contact</span></div>
+      <div class="search">&#8981; Search for product</div>
+      <div class="navicons">&#9825; &#128722; &#9679;</div>
+    </nav>
+    <div class="hero">
+      <div><div class="heroeyebrow">Home &middot; iPhone 15 accessories</div><h1 class="herotitle">Shop, chat, checkout — all in one place</h1></div>
+      <div class="heroicons">
+        <div class="swatch" style="background:var(--coral)"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.6"><rect x="7" y="2" width="10" height="20" rx="2"/></svg></div>
+        <div class="swatch" style="background:var(--sage);height:96px"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.6"><rect x="6" y="3" width="12" height="18" rx="1.5"/></svg></div>
+        <div class="swatch" style="background:var(--mustard);height:66px"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.6"><circle cx="8" cy="12" r="3.2"/><circle cx="16" cy="12" r="3.2"/></svg></div>
+      </div>
+    </div>
+    <div class="sectiontitle">Product categories</div>
+    <div class="cats">
+      <div class="cat" style="background:var(--coral)"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.6"><rect x="7" y="2" width="10" height="20" rx="2"/></svg>Cases</div>
+      <div class="cat" style="background:var(--sage)"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.6"><circle cx="8" cy="12" r="3.2"/><circle cx="16" cy="12" r="3.2"/></svg>Audio</div>
+      <div class="cat" style="background:var(--pink)"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.6"><rect x="4" y="8" width="16" height="8" rx="2"/></svg>Chargers</div>
+      <div class="cat" style="background:var(--mustard);color:var(--ink)"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" style="stroke:var(--ink)"><rect x="6" y="3" width="12" height="18" rx="1.5"/></svg>Protectors</div>
+    </div>
+    <div class="sectiontitle">Popular right now</div>
+    <div class="grid">
+      <div class="product" onclick="showScreen('screen-product')">
+        <div class="thumb" style="background:var(--sage-bg)"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.4" style="stroke:var(--sage)"><rect x="7" y="2" width="10" height="20" rx="2"/></svg></div>
+        <div class="stars">&#9733;&#9733;&#9733;&#9733;&#9734;</div><div class="pname">Silicone case</div><div class="pprice">&#8377;599</div>
+      </div>
+      <div class="product">
+        <div class="thumb" style="background:var(--lavender-bg)"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.4" style="stroke:var(--lavender)"><rect x="6" y="3" width="12" height="18" rx="1.5"/></svg></div>
+        <div class="stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div><div class="pname">Glass protector</div><div class="pprice">&#8377;199</div>
+      </div>
+      <div class="product">
+        <div class="thumb" style="background:var(--pink-bg)"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.4" style="stroke:var(--pink)"><circle cx="8" cy="12" r="3.2"/><circle cx="16" cy="12" r="3.2"/></svg></div>
+        <div class="stars">&#9733;&#9733;&#9733;&#9733;&#9734;</div><div class="pname">Sony WH-1000XM5</div><div class="pprice">&#8377;29,999</div>
+      </div>
+      <div class="product">
+        <div class="thumb" style="background:var(--mustard-bg)"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.4" style="stroke:var(--mustard)"><rect x="4" y="8" width="16" height="8" rx="2"/></svg></div>
+        <div class="stars">&#9733;&#9733;&#9733;&#9733;&#9734;</div><div class="pname">20W fast charger</div><div class="pprice">&#8377;899</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="screen" id="screen-product">
+  <div class="page">
+    <nav class="consumer">
+      <div class="wordmark">parcel</div>
+      <div class="navlinks"><span>Home</span><span>Product</span><span>Help</span><span>Contact</span></div>
+      <div class="search">&#8981; Search for product</div>
+      <div class="navicons">&#9825; &#128722; &#9679;</div>
+    </nav>
+    <div class="pd">
+      <div class="pdimg"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.2"><rect x="7" y="2" width="10" height="20" rx="2"/></svg></div>
+      <div>
+        <div class="pdname">iPhone 15 silicone case</div>
+        <div class="pdmeta">&#9733;&#9733;&#9733;&#9733;&#9734; &nbsp;128 reviews &nbsp;&middot;&nbsp; 6 colors</div>
+        <div class="pdprice">&#8377;599</div>
+        <div class="pddesc">Soft-touch silicone with a microfiber lining to protect against drops and scratches. Precise cutouts for camera and ports, compatible with MagSafe chargers.</div>
+        <div class="pdbtns">
+          <button class="btn-primary" onclick="document.getElementById('chatPanel').classList.add('open')">Ask Parcel to add this</button>
+          <button class="btn-secondary">Add to cart</button>
+        </div>
+        <div class="relatedtitle">Frequently bought together</div>
+        <div class="relatedrow">
+          <div class="relatedcard"><div class="thumb" style="background:var(--lavender-bg)"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.4" style="stroke:var(--lavender)"><rect x="6" y="3" width="12" height="18" rx="1.5"/></svg></div><div class="pname">Glass protector</div><div class="pprice">&#8377;199</div></div>
+          <div class="relatedcard"><div class="thumb" style="background:var(--mustard-bg)"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.4" style="stroke:var(--mustard)"><rect x="4" y="8" width="16" height="8" rx="2"/></svg></div><div class="pname">Fast charger</div><div class="pprice">&#8377;899</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="screen" id="screen-confirm">
+  <div class="page">
+    <nav class="consumer">
+      <div class="wordmark">parcel</div>
+      <div class="navlinks"><span>Home</span><span>Product</span><span>Help</span><span>Contact</span></div>
+      <div class="search">&#8981; Search for product</div>
+      <div class="navicons">&#9825; &#128722; &#9679;</div>
+    </nav>
+    <div class="confirmwrap">
+      <div class="confirmcard">
+        <div class="checkicon"><svg viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7"/></svg></div>
+        <div class="confirmtitle">Payment successful</div>
+        <div class="confirmsub">A confirmation has been sent to your email</div>
+        <div class="orderid">Order #6A9183A4</div>
+        <div class="itemsrow"><span>Silicone case</span><span>&#8377;599</span></div>
+        <div class="itemsrow"><span>Glass protector</span><span>&#8377;199</span></div>
+        <div class="totalrow"><span>Total paid</span><span>&#8377;798</span></div>
+        <button class="btn-primary contbtn" onclick="showScreen('screen-home')">Continue shopping</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="screen" id="screen-orders">
+  <div class="page">
+    <nav class="consumer">
+      <div class="wordmark">parcel</div>
+      <div class="navlinks"><span>Home</span><span>Product</span><span>Help</span><span>Contact</span></div>
+      <div class="search">&#8981; Search for product</div>
+      <div class="navicons">&#9825; &#128722; &#9679;</div>
+    </nav>
+    <div class="sectiontitle">Your orders</div>
+    <div class="orderslist">
+      <div class="ordercard">
+        <div class="orderleft"><div class="oname">Silicone case + glass protector</div><div class="odate">28 Aug 2026</div></div>
+        <div class="orderright"><span class="ototal">&#8377;798</span><span class="pill paid">Paid</span></div>
+      </div>
+      <div class="ordercard">
+        <div class="orderleft"><div class="oname">Sony WH-1000XM5</div><div class="odate">22 Aug 2026</div></div>
+        <div class="orderright"><span class="ototal">&#8377;29,999</span><span class="pill failed">Failed</span></div>
+      </div>
+      <div class="ordercard">
+        <div class="orderleft"><div class="oname">20W fast charger</div><div class="odate">14 Aug 2026</div></div>
+        <div class="orderright"><span class="ototal">&#8377;899</span><span class="pill paid">Paid</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="screen" id="screen-admin">
+  <div class="adminnav">
+    <div class="adminwordmark">parcel &middot; merchant console</div>
+    <div class="adminback" onclick="showScreen('screen-home')">&larr; Back to storefront</div>
+  </div>
+  <div class="adminbody">
+    <div class="admingrid">
+      <div class="panel">
+        <div class="paneltitle">Recent gate decisions</div>
+        <table>
+          <tr><th>Time</th><th>Action</th><th>Detail</th><th>Result</th></tr>
+          <tr><td class="mono">09:41:02</td><td>Search</td><td class="mono">iphone 15 case</td><td><span class="pill paid" style="font-size:10px">—</span></td></tr>
+          <tr><td class="mono">09:41:15</td><td>Gate check</td><td class="mono">&#8377;798 within &#8377;5,000</td><td><span class="pill paid">Approved</span></td></tr>
+          <tr><td class="mono">09:41:22</td><td>Razorpay order</td><td class="mono">order_TVCAcVy</td><td><span class="pill paid">Created</span></td></tr>
+          <tr><td class="mono">09:41:24</td><td>Verified</td><td class="mono">signature match</td><td><span class="pill paid">Paid</span></td></tr>
+          <tr><td class="mono">09:52:08</td><td>Gate check</td><td class="mono">&#8377;29,999 · card declined</td><td><span class="pill failed">Failed</span></td></tr>
+        </table>
+      </div>
+      <div class="panel">
+        <div class="paneltitle">Policy limits</div>
+        <div class="limititem"><span>Max order value</span><span class="limitval">&#8377;5,000</span></div>
+        <div class="limititem"><span>Max discount</span><span class="limitval">10%</span></div>
+        <div class="limititem"><span>Payment confirmation</span><span class="limitval">Always required</span></div>
+        <div class="limititem"><span>Upsells per turn</span><span class="limitval">1 max</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="chatbubble" id="chatBubble" onclick="document.getElementById('chatPanel').classList.add('open')">
+  <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><path d="M4 4h16v12H8l-4 4V4z"/></svg>
+</div>
+<div class="chatpanel" id="chatPanel">
+  <div class="chathead">
+    <div><div class="t">Checkout assistant</div><div class="s"><span class="dot"></span>Connected</div></div>
+    <div class="close" onclick="document.getElementById('chatPanel').classList.remove('open')">&times;</div>
+  </div>
+  <div class="chatbody">
+    <div class="bubble buyer">I need a case for my iPhone 15</div>
+    <div class="bubble agent">Found it — the Silicone case is ₹599, ships in 2 days.</div>
+    <div class="upsell">
+      <div class="uicon"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.6"><rect x="6" y="3" width="12" height="18" rx="1.5"/></svg></div>
+      <div><div class="uname">Glass protector — ₹199</div><div class="ureason">Frequently bought together</div></div>
+    </div>
+    <div class="bubble buyer">Yes, add that too</div>
+    <div class="gatecard">
+      <div class="gaterow"><span>Silicone case</span><span>₹599</span></div>
+      <div class="gaterow"><span>Glass protector</span><span>₹199</span></div>
+      <div class="gatetotal"><span>Total</span><span>₹798</span></div>
+      <button class="confirmbtn" onclick="showScreen('screen-confirm');document.getElementById('chatPanel').classList.remove('open')">Confirm ₹798 payment</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  var screens = ['home','product','confirm','orders','admin'];
+  var labels = {home:'Home',product:'Product detail',confirm:'Order confirmed',orders:'Order history',admin:'Merchant console'};
+  var sw = document.getElementById('switcher');
+  screens.forEach(function(id){
+    var b = document.createElement('button');
+    b.textContent = labels[id];
+    b.onclick = function(){ showScreen('screen-' + id); };
+    b.id = 'tab-' + id;
+    sw.appendChild(b);
+  });
+
+  function showScreen(target){
+    screens.forEach(function(id){
+      document.getElementById('screen-' + id).classList.toggle('active', 'screen-' + id === target);
+      document.getElementById('tab-' + id).classList.toggle('active', 'screen-' + id === target);
+    });
+    var isAdmin = target === 'screen-admin';
+    document.getElementById('chatBubble').style.display = isAdmin ? 'none' : 'flex';
+    if(isAdmin) document.getElementById('chatPanel').classList.remove('open');
+  }
+  showScreen('screen-home');
+</script>
+</body>
+</html>

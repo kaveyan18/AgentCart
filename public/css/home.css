@@ -1,0 +1,99 @@
+/* ── Home Screen ─────────────────────────────────────────────── */
+
+/* Hero banner */
+.hero {
+  background: var(--sage-bg);
+  border-radius: var(--r-xl);
+  padding: 40px 44px;
+  margin-bottom: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.hero-eyebrow {
+  font-size: 11px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--sage);
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.hero-title {
+  font-family: var(--font-brand);
+  font-size: 34px;
+  font-weight: 700;
+  line-height: 1.2;
+  max-width: 400px;
+}
+
+.hero-icons {
+  display: flex;
+  gap: 12px;
+  align-items: flex-end;
+}
+.hero-swatch {
+  width: 62px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.hero-swatch svg { width: 26px; height: 26px; stroke: #fff; }
+
+/* Category chips */
+.cats {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 28px;
+  flex-wrap: wrap;
+}
+.cat {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 18px;
+  border-radius: var(--r-md);
+  font-size: 13px;
+  font-weight: 600;
+  color: #fff;
+  cursor: pointer;
+  transition: transform .15s, box-shadow .15s;
+}
+.cat:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(0,0,0,.14);
+}
+.cat svg { width: 16px; height: 16px; stroke: #fff; flex-shrink: 0; }
+.cat.dark { color: var(--ink); }
+.cat.dark svg { stroke: var(--ink); }
+
+/* Product grid */
+.product-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 18px;
+}
+@media (max-width: 1100px) { .product-grid { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 768px)  { .product-grid { grid-template-columns: repeat(2, 1fr); } }
+
+/* Product card */
+.product-card {
+  background: var(--white);
+  border-radius: var(--r-lg);
+  padding: 14px;
+  cursor: pointer;
+  transition: transform .2s, box-shadow .2s;
+}
+.product-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+}
+.product-card .thumb {
+  height: 130px;
+  margin-bottom: 14px;
+}
+.product-card .thumb svg { width: 44px; height: 44px; }
+.product-card .pname { font-size: 14px; font-weight: 600; margin-bottom: 2px; }
+.product-card .pprice { font-size: 13px; color: var(--slate); font-weight: 500; }

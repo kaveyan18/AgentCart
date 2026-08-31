@@ -1,0 +1,75 @@
+/* ── Order Confirmation Screen ───────────────────────────────── */
+
+.confirm-wrap {
+  display: flex;
+  justify-content: center;
+  padding: 60px 0;
+}
+
+.confirm-card {
+  background: var(--white);
+  border-radius: var(--r-xl);
+  padding: 44px;
+  width: 480px;
+  max-width: 100%;
+  text-align: center;
+  box-shadow: var(--shadow-lg);
+}
+
+/* Icon circle */
+.confirm-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 18px;
+}
+.confirm-icon.success { background: var(--sage); }
+.confirm-icon.failure { background: var(--rust); }
+.confirm-icon svg { width: 30px; height: 30px; stroke: #fff; stroke-width: 2.4; fill: none; }
+
+.confirm-title {
+  font-family: var(--font-brand);
+  font-size: 24px;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+.confirm-sub {
+  font-size: 12.5px;
+  color: var(--slate);
+  margin-bottom: 24px;
+}
+.confirm-order-id {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--slate);
+  margin-bottom: 22px;
+}
+
+/* Item rows */
+.item-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+}
+.total-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 16px;
+  font-weight: 600;
+  padding: 14px 0 22px;
+  text-align: left;
+}
+
+/* Failure actions */
+.failure-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 20px;
+}

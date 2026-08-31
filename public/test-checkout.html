@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Webhook Test — Razorpay Checkout</title>
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: #0f0f1a;
+      color: #e2e8f0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+    }
+
+    .card {
+      background: #1a1a2e;
+      border: 1px solid #2d2d4e;
+      border-radius: 16px;
+      padding: 2rem;
+      width: 100%;
+      max-width: 480px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    }
+
+    h1 {
+      font-size: 1.3rem;
+      font-weight: 700;
+      margin-bottom: 0.25rem;
+      color: #a78bfa;
+    }
+
+    .subtitle {
+      font-size: 0.82rem;
+      color: #64748b;
+      margin-bottom: 1.5rem;
+    }
+
+    .order-box {
+      background: #0f0f1a;
+      border: 1px solid #2d2d4e;
+      border-radius: 10px;
+      padding: 1rem 1.25rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .order-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.4rem 0;
+      font-size: 0.9rem;
+      border-bottom: 1px solid #2d2d4e;
+    }
+    .order-row:last-child { border-bottom: none; }
+    .order-row .label { color: #94a3b8; }
+    .order-row .value { font-weight: 600; }
+    .order-row.total .value { color: #34d399; font-size: 1.05rem; }
+
+    .btn {
+      width: 100%;
+      padding: 0.85rem;
+      border: none;
+      border-radius: 10px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-bottom: 0.75rem;
+    }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    #btn-success {
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      color: #fff;
+    }
+    #btn-success:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(139,92,246,0.4); }
+
+    #btn-fail {
+      background: transparent;
+      border: 1px solid #ef4444;
+      color: #ef4444;
+    }
+    #btn-fail:hover:not(:disabled) { background: rgba(239,68,68,0.1); }
+
+    .test-cards {
+      background: #0a0a14;
+      border: 1px dashed #2d2d4e;
+      border-radius: 8px;
+      padding: 0.9rem 1rem;
+      margin-top: 1rem;
+      font-size: 0.78rem;
+    }
+    .test-cards h3 { font-size: 0.75rem; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.6rem; }
+    .test-cards .row { display: flex; justify-content: space-between; margin: 0.3rem 0; color: #94a3b8; }
+    .test-cards .row span { font-family: monospace; color: #e2e8f0; }
+
+    #log {
+      margin-top: 1.25rem;
+      background: #0a0a14;
+      border: 1px solid #2d2d4e;
+      border-radius: 8px;
+      padding: 0.75rem 1rem;
+      font-family: monospace;
+      font-size: 0.75rem;
+      min-height: 60px;
+      max-height: 180px;
+      overflow-y: auto;
+      color: #94a3b8;
+    }
+    #log .success { color: #34d399; }
+    #log .error   { color: #f87171; }
+    #log .info    { color: #60a5fa; }
+  </style>
+</head>
+<body>
+<div class="card">
+  <h1>🧪 Razorpay Webhook Test</h1>
+  <p class="subtitle">Creates a real Razorpay order → opens checkout → triggers your webhook</p>
+
+  <div class="order-box">
+    <div class="order-row">
+      <span class="label">iPhone 15 Silicone Case</span>
+      <span class="value">₹599</span>
+    </div>
+    <div class="order-row">
+      <span class="label">Screen Protector</span>
+      <span class="value">₹199</span>
+    </div>
+    <div class="order-row total">
+      <span class="label">Total</span>
+      <span class="value">₹798</span>
+    </div>
+  </div>
+
+  <button class="btn" id="btn-success">✅ Pay ₹798 (Success card)</button>
+  <button class="btn" id="btn-fail">❌ Pay ₹798 (Decline card)</button>
+
+  <div class="test-cards">
+    <h3>Razorpay Test Cards</h3>
+    <div class="row">✅ Success card <span>4111 1111 1111 1111</span></div>
+    <div class="row">❌ Decline card <span>4000 0000 0000 0002</span></div>
+    <div class="row">Expiry / CVV <span>Any future date / any 3 digits</span></div>
+    <div class="row">OTP (if asked) <span>1234 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></div>
+  </div>
+
+  <div id="log"><span class="info">Ready — click a button above to start.</span></div>
+</div>
+
+<script>
+  const items = [
+    { name: 'iPhone 15 Silicone Case', price: 599, qty: 1 },
+    { name: 'iPhone 15 Tempered Glass Screen Protector', price: 199, qty: 1 }
+  ];
+
+  const logEl = document.getElementById('log');
+  function log(msg, type = 'info') {
+    const line = document.createElement('div');
+    line.className = type;
+    line.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+    logEl.appendChild(line);
+    logEl.scrollTop = logEl.scrollHeight;
+  }
+
+  async function startPayment(prefillCard) {
+    document.getElementById('btn-success').disabled = true;
+    document.getElementById('btn-fail').disabled = true;
+
+    log('Creating order via /api/orders/confirm ...');
+
+    let orderData;
+    try {
+      const res = await fetch('/api/orders/confirm', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ items })
+      });
+      orderData = await res.json();
+      if (!res.ok) throw new Error(orderData.message || 'Order creation failed');
+    } catch (err) {
+      log('❌ Order creation failed: ' + err.message, 'error');
+      document.getElementById('btn-success').disabled = false;
+      document.getElementById('btn-fail').disabled = false;
+      return;
+    }
+
+    log(`✅ Order created: ${orderData.razorpayOrderId} (₹${orderData.amount / 100})`, 'success');
+    log('Opening Razorpay checkout ...');
+
+    const options = {
+      key: orderData.keyId,
+      amount: orderData.amount,
+      currency: orderData.currency,
+      order_id: orderData.razorpayOrderId,
+      name: 'Agentic Commerce',
+      description: 'iPhone 15 Accessories Bundle',
+      prefill: {
+        name: 'Test User',
+        email: 'test@example.com',
+        contact: '9999999999',
+        // Prefill the card number to make testing faster
+        'method': 'card',
+        'card[number]': prefillCard,
+        'card[expiry]': '12/26',
+        'card[cvv]': '123'
+      },
+      theme: { color: '#6366f1' },
+      handler: async function (response) {
+        log(`✅ Payment success! ID: ${response.razorpay_payment_id}`, 'success');
+        log('Verifying signature with backend...', 'info');
+
+        try {
+          const verifyRes = await fetch('/api/orders/verify', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              orderId: orderData.orderId,
+              razorpayPaymentId: response.razorpay_payment_id,
+              razorpayOrderId: response.razorpay_order_id,
+              razorpaySignature: response.razorpay_signature
+            })
+          });
+          const verifyData = await verifyRes.json();
+          if (verifyData.status === 'paid') {
+            log(`🎉 Order ${orderData.orderId} verified & marked as PAID in Mongo!`, 'success');
+          } else {
+            log(`⚠️ Verification failed: ${verifyData.message}`, 'error');
+          }
+        } catch (err) {
+          log('Verification error: ' + err.message, 'error');
+        }
+
+        document.getElementById('btn-success').disabled = false;
+        document.getElementById('btn-fail').disabled = false;
+      },
+      modal: {
+        ondismiss: function () {
+          log('Modal closed by user.', 'info');
+          document.getElementById('btn-success').disabled = false;
+          document.getElementById('btn-fail').disabled = false;
+        }
+      }
+    };
+
+    const rzp = new Razorpay(options);
+    rzp.on('payment.failed', async function (response) {
+      log(`❌ Payment failed: ${response.error.description}`, 'error');
+      log(`Error code: ${response.error.code} | Reason: ${response.error.reason}`, 'error');
+      
+      try {
+        await fetch('/api/orders/fail', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            orderId: orderData.orderId,
+            errorReason: response.error.reason,
+            errorCode: response.error.code
+          })
+        });
+        log(`📝 Order ${orderData.orderId} marked as FAILED in Mongo with reason captured!`, 'error');
+      } catch (err) {
+        log('Error recording failure: ' + err.message, 'error');
+      }
+
+      document.getElementById('btn-success').disabled = false;
+      document.getElementById('btn-fail').disabled = false;
+    });
+
+    rzp.open();
+  }
+
+  document.getElementById('btn-success').onclick = () => startPayment('4111111111111111');
+  document.getElementById('btn-fail').onclick    = () => startPayment('4000000000000002');
+</script>
+</body>
+</html>

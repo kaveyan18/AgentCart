@@ -1,0 +1,77 @@
+/* ── Product Detail Screen ───────────────────────────────────── */
+
+.pd-grid {
+  display: grid;
+  grid-template-columns: 440px 1fr;
+  gap: 36px;
+  background: var(--white);
+  border-radius: var(--r-xl);
+  padding: 32px;
+}
+@media (max-width: 900px) {
+  .pd-grid { grid-template-columns: 1fr; }
+}
+
+.pd-image {
+  background: var(--sage-bg);
+  border-radius: var(--r-lg);
+  height: 380px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.pd-image svg { width: 120px; height: 120px; stroke: var(--sage); }
+
+.pd-name {
+  font-family: var(--font-brand);
+  font-size: 26px;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+.pd-meta {
+  font-size: 12.5px;
+  color: var(--slate);
+  margin-bottom: 14px;
+}
+.pd-price {
+  font-family: var(--font-brand);
+  font-size: 28px;
+  color: var(--coral-dark);
+  margin-bottom: 18px;
+}
+.pd-desc {
+  font-size: 13.5px;
+  line-height: 1.75;
+  color: var(--ink);
+  margin-bottom: 22px;
+}
+.pd-actions {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 28px;
+}
+
+/* Related products strip */
+.related-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--slate);
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  margin-bottom: 10px;
+}
+.related-row { display: flex; gap: 12px; flex-wrap: wrap; }
+
+.related-card {
+  background: var(--cream);
+  border-radius: var(--r-md);
+  padding: 10px;
+  width: 140px;
+  cursor: pointer;
+  transition: transform .15s;
+}
+.related-card:hover { transform: translateY(-2px); }
+.related-card .thumb { height: 64px; margin-bottom: 8px; }
+.related-card .thumb svg { width: 24px; height: 24px; }
+.related-card .pname  { font-size: 11.5px; font-weight: 600; margin-bottom: 2px; }
+.related-card .pprice { font-size: 11px; color: var(--slate); }
