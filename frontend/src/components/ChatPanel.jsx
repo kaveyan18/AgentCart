@@ -5,6 +5,100 @@ import { useChat } from '../context/ChatContext';
 import GateCard from './GateCard';
 import UpsellCard from './UpsellCard';
 
+/* ── Lightweight Markdown → React renderer ───────────────────────────────── */
+function MarkdownText({ text, isAgent }) {
+  if (!text) return null;
+
+  const lines = text.split('\n');
+  const elements = [];
+  let i = 0;
+
+  while (i < lines.length) {
+    const line = lines[i];
+
+    // Numbered list item: "1. item"
+    if (/^\d+\.\s/.test(line)) {
+      const listItems = [];
+      while (i < lines.length && /^\d+\.\s/.test(lines[i])) {
+        listItems.push(lines[i].replace(/^\d+\.\s/, ''));
+        i++;
+      }
+      elements.push(
+        <ol key={`ol-${i}`} style={mdStyles.ol}>
+          {listItems.map((item, idx) => (
+            <li key={idx} style={mdStyles.li}><InlineMarkdown text={item} /></li>
+          ))}
+        </ol>
+      );
+      continue;
+    }
+
+    // Bullet list item: "- item" or "* item"
+    if (/^[-*]\s/.test(line)) {
+      const listItems = [];
+      while (i < lines.length && /^[-*]\s/.test(lines[i])) {
+        listItems.push(lines[i].replace(/^[-*]\s/, ''));
+        i++;
+      }
+      elements.push(
+        <ul key={`ul-${i}`} style={mdStyles.ul}>
+          {listItems.map((item, idx) => (
+            <li key={idx} style={mdStyles.li}><InlineMarkdown text={item} /></li>
+          ))}
+        </ul>
+      );
+      continue;
+    }
+
+    // Blank line → spacing
+    if (line.trim() === '') {
+      elements.push(<div key={`sp-${i}`} style={{ height: '6px' }} />);
+      i++;
+      continue;
+    }
+
+    // Normal paragraph line
+    elements.push(
+      <p key={`p-${i}`} style={mdStyles.p}>
+        <InlineMarkdown text={line} />
+      </p>
+    );
+    i++;
+  }
+
+  return <div>{elements}</div>;
+}
+
+/* Handles **bold**, *italic*, and `code` within a single line */
+function InlineMarkdown({ text }) {
+  // Split on **bold**, *italic*, `code`
+  const parts = text.split(/(\*\*[^*]+\*\*|\*[^*]+\*|`[^`]+`)/g);
+  return (
+    <>
+      {parts.map((part, idx) => {
+        if (/^\*\*[^*]+\*\*$/.test(part)) {
+          return <strong key={idx} style={{ fontWeight: '700' }}>{part.slice(2, -2)}</strong>;
+        }
+        if (/^\*[^*]+\*$/.test(part)) {
+          return <em key={idx}>{part.slice(1, -1)}</em>;
+        }
+        if (/^`[^`]+`$/.test(part)) {
+          return <code key={idx} style={mdStyles.code}>{part.slice(1, -1)}</code>;
+        }
+        return part;
+      })}
+    </>
+  );
+}
+
+const mdStyles = {
+  p:    { margin: '0 0 2px 0', lineHeight: '1.55' },
+  ol:   { margin: '4px 0', paddingLeft: '18px', display: 'flex', flexDirection: 'column', gap: '3px' },
+  ul:   { margin: '4px 0', paddingLeft: '18px', display: 'flex', flexDirection: 'column', gap: '3px' },
+  li:   { lineHeight: '1.5' },
+  code: { background: 'rgba(0,0,0,0.08)', borderRadius: '4px', padding: '1px 5px', fontFamily: 'monospace', fontSize: '12px' },
+};
+
 export default function ChatPanel() {
   const {
     messages,
@@ -105,7 +199,12 @@ export default function ChatPanel() {
                   <span>AgentCart</span>
                 </div>
               )}
-              <div style={styles.bubbleText}>{m.text}</div>
+              <div style={styles.bubbleText}>
+                {m.role === 'agent'
+                  ? <MarkdownText text={m.text} />
+                  : m.text
+                }
+              </div>
             </div>
 
             {/* Structured Items / Gate Card */}
