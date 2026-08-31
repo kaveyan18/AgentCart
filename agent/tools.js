@@ -7,16 +7,18 @@ const { writeLog } = require('../services/auditService');
 async function searchCatalog(query) {
   // Split into individual words so "iPhone 15 case" finds products
   // containing each of those words, regardless of order
-  const terms = query.trim().split(/\s+/);
-  const andClauses = terms.map(term => ({
-    $or: [
-      { name: new RegExp(term, 'i') },
-      { description: new RegExp(term, 'i') },
-      { category: new RegExp(term, 'i') }
-    ]
-  }));
+  const terms = (query || '').trim().split(/\s+/).filter(Boolean);
+  const andClauses = terms.length > 0
+    ? terms.map(term => ({
+        $or: [
+          { name: new RegExp(term, 'i') },
+          { description: new RegExp(term, 'i') },
+          { category: new RegExp(term, 'i') }
+        ]
+      }))
+    : [{}];
 
-  const results = await Product.find({ $and: andClauses });
+  const results = await Product.find({ $and: andClauses }).limit(5);
   return results.map(p => ({
     id: p._id,
     name: p.name,
@@ -27,14 +29,14 @@ async function searchCatalog(query) {
 
 async function getUpsellCandidates(productId) {
   const product = await Product.findById(productId);
-  if (!product || !product.relatedTo.length) return [];
+  if (!product || !product.relatedTo || !product.relatedTo.length) return [];
 
-  const related = await Product.find({ _id: { $in: product.relatedTo } });
+  const related = await Product.find({ _id: { $in: product.relatedTo } }).limit(2);
   return related.map(p => ({
     id: p._id,
     name: p.name,
     price: p.price,
-    reason: `Frequently bought with ${product.name}`
+    reason: `Pairs well with ${product.name}`
   }));
 }
 

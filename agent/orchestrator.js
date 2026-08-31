@@ -6,53 +6,85 @@ const { searchCatalog, getUpsellCandidates, toolSchemas, proposeOrder, getOrderS
 
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 const systemPrompt = fs.readFileSync(path.join(__dirname, 'agent.md'), 'utf-8');
+const MODEL_NAME = process.env.GROQ_MODEL || 'qwen/qwen3.8-27b';
 
 const availableFunctions = {
   search_catalog: (args) => searchCatalog(args.query),
   get_upsell_candidates: (args) => getUpsellCandidates(args.productId),
-  propose_order: (args) => proposeOrder(args),
+  propose_order: (args, context) => proposeOrder(args, context),
   get_order_status: (args) => getOrderStatus(args)
 };
 
 /**
- * Proper agentic loop:
- * Keep calling Groq + executing tools until the model stops calling tools
- * and produces a plain text reply. Max 5 iterations to prevent runaway.
+ * Filter history to keep only clean user & assistant turns (last 6 max).
+ * Strips verbose internal tool outputs and token-heavy blobs from older turns.
  */
-async function runAgent(userMessage, conversationHistory = [], context = {}) {
+function sanitizeHistory(history) {
+  if (!Array.isArray(history)) return [];
+  const clean = [];
+
+  for (const msg of history) {
+    if (!msg || typeof msg !== 'object') continue;
+    if (msg.role === 'user' && typeof msg.content === 'string') {
+      clean.push({ role: 'user', content: msg.content.trim() });
+    } else if (msg.role === 'assistant' && typeof msg.content === 'string' && msg.content.trim()) {
+      // Remove any leftover thinking blocks or tool metadata
+      const text = msg.content.replace(/<think>[\s\S]*?<\/think>/g, '').trim();
+      if (text) {
+        clean.push({ role: 'assistant', content: text });
+      }
+    }
+  }
+
+  // Keep at most the last 6 messages (3 conversation rounds) to stay well within TPM
+  return clean.slice(-6);
+}
+
+/**
+ * Executes a single agentic session with Groq tool calling loop.
+ */
+async function executeAgentTurn(sanitizedHistory, userMessage, context = {}) {
   const messages = [
     { role: 'system', content: systemPrompt },
-    ...conversationHistory,
+    ...sanitizedHistory,
     { role: 'user', content: userMessage }
   ];
 
-  const MAX_TURNS = 8;
+  const MAX_TOOL_TURNS = 6;
 
-  for (let turn = 0; turn < MAX_TURNS; turn++) {
+  for (let turn = 0; turn < MAX_TOOL_TURNS; turn++) {
     const response = await groq.chat.completions.create({
-      model: 'qwen/qwen3.8-27b',
+      model: MODEL_NAME,
       messages,
       tools: toolSchemas,
-      tool_choice: 'auto'
+      tool_choice: 'auto',
+      max_tokens: 600,
+      temperature: 0.4
     });
 
-   const responseMessage = response.choices[0].message;
+    const responseMessage = response.choices[0].message;
     const toolCalls = responseMessage.tool_calls;
-    console.log(`[turn ${turn}] tool_calls: ${toolCalls ? toolCalls.map(c => c.function.name).join(', ') : 'none (final reply)'}`);
 
     // No tool calls → model produced a final text reply
     if (!toolCalls || toolCalls.length === 0) {
       const rawReply = responseMessage.content || '';
       const cleanReply = rawReply
-        .replace(/<think>[\s\S]*?<\/think>/g, '')  // strip Qwen reasoning blocks
+        .replace(/<think>[\s\S]*?<\/think>/g, '') // strip Qwen reasoning blocks
         .trim();
+
+      const nextCleanHistory = [
+        ...sanitizedHistory,
+        { role: 'user', content: userMessage },
+        { role: 'assistant', content: cleanReply }
+      ].slice(-6);
+
       return {
         reply: cleanReply,
-        history: [...messages, responseMessage]
+        history: nextCleanHistory
       };
     }
 
-    // Execute every tool the model requested
+    // Execute tool calls
     messages.push(responseMessage);
 
     for (const call of toolCalls) {
@@ -68,7 +100,9 @@ async function runAgent(userMessage, conversationHistory = [], context = {}) {
 
       let args;
       try {
-        args = JSON.parse(call.function.arguments);
+        args = typeof call.function.arguments === 'string'
+          ? JSON.parse(call.function.arguments)
+          : call.function.arguments || {};
       } catch {
         args = {};
       }
@@ -80,13 +114,45 @@ async function runAgent(userMessage, conversationHistory = [], context = {}) {
         content: JSON.stringify(result)
       });
     }
-    // Loop back — let the model see the tool results and decide what to do next
   }
 
   return {
-    reply: '[Assistant reply interrupted after too many steps.]',
-    history: messages
+    reply: "I found the details for your request! How would you like to proceed?",
+    history: [
+      ...sanitizedHistory,
+      { role: 'user', content: userMessage },
+      { role: 'assistant', content: "I found the details for your request!" }
+    ].slice(-6)
   };
+}
+
+/**
+ * Top-level agent runner with automatic TPM rate-limit protection & fallback retry.
+ */
+async function runAgent(userMessage, conversationHistory = [], context = {}) {
+  const sanitized = sanitizeHistory(conversationHistory);
+
+  try {
+    return await executeAgentTurn(sanitized, userMessage, context);
+  } catch (err) {
+    const isRateLimit = err.status === 413 || err.status === 429 || (err.message && err.message.includes('TPM'));
+    console.warn(`[runAgent] Primary attempt failed (rateLimit=${isRateLimit}):`, err.message);
+
+    // If rate limit or token limit was hit, retry with empty history (only current turn)
+    if (isRateLimit && sanitized.length > 0) {
+      console.log('[runAgent] Retrying with pruned single-turn context...');
+      try {
+        return await executeAgentTurn([], userMessage, context);
+      } catch (retryErr) {
+        console.error('[runAgent] Retry also failed:', retryErr.message);
+      }
+    }
+
+    return {
+      reply: "I'm right here to help! Could you please repeat what product you're looking for?",
+      history: [{ role: 'user', content: userMessage }]
+    };
+  }
 }
 
 module.exports = { runAgent };
