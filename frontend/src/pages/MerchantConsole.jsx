@@ -7,106 +7,394 @@ import {
   Activity,
   Lock,
   Percent,
-  Sparkles,
+  Plus,
+  Edit2,
+  Trash2,
+  Package,
+  Search,
   CheckCircle2,
   XCircle,
   CreditCard,
-  Search,
-  SlidersHorizontal
+  SlidersHorizontal,
+  X,
+  User,
+  ExternalLink,
+  Tag
 } from 'lucide-react';
-import { getAuditLogs } from '../api/client';
-import { formatTime } from '../utils/helpers';
+import { getAuditLogs, getAllOrdersForAdmin, getProducts, createProduct, updateProduct, deleteProduct } from '../api/client';
+import { formatPrice, formatTime, formatDate } from '../utils/helpers';
+import { useAuth } from '../context/AuthContext';
 
 export default function MerchantConsole() {
+  const { user, logout } = useAuth();
+  const [activeTab, setActiveTab] = useState('catalog'); // 'catalog' | 'audit' | 'orders'
+
+  // Data states
   const [logs, setLogs] = useState([]);
+  const [orders, setOrders] = useState([]);
+  const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  // Modal / Form state
+  const [showProductModal, setShowProductModal] = useState(false);
+  const [editingProduct, setEditingProduct] = useState(null);
+  const [modalForm, setModalForm] = useState({
+    _id: '',
+    name: '',
+    price: '',
+    category: 'laptops',
+    description: '',
+    relatedTo: []
+  });
+  const [formError, setFormError] = useState('');
+  const [actionLoading, setActionLoading] = useState(false);
+
+  // Load all merchant data
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      const [logsData, ordersData, productsData] = await Promise.all([
+        getAuditLogs().catch(() => []),
+        getAllOrdersForAdmin().catch(() => []),
+        getProducts().catch(() => [])
+      ]);
+      setLogs(logsData);
+      setOrders(ordersData);
+      setProducts(productsData);
+    } catch (err) {
+      console.error('Failed to load merchant data:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    async function loadLogs() {
-      try {
-        setLoading(true);
-        const data = await getAuditLogs();
-        setLogs(data);
-      } catch (err) {
-        console.error('Failed to load audit logs:', err);
-      } finally {
-        setLoading(false);
-      }
-    }
-    loadLogs();
+    fetchData();
   }, []);
 
-  const sampleFallbackLogs = [
-    { timestamp: new Date(), action: 'order_search', reason: 'iphone 15 case', ok: true },
-    { timestamp: new Date(Date.now() - 30000), action: 'policy_gate_check', reason: '₹798 within ₹5,000 max policy limit', ok: true },
-    { timestamp: new Date(Date.now() - 60000), action: 'razorpay_order_created', reason: 'order_TVCAcVy created with key verification', ok: true },
-    { timestamp: new Date(Date.now() - 90000), action: 'payment_captured', reason: 'HMAC signature verified matching key', ok: true },
-    { timestamp: new Date(Date.now() - 120000), action: 'payment_failed', reason: 'bank declined transaction', ok: false }
-  ];
+  // Modal Handlers
+  const handleOpenAddModal = () => {
+    setEditingProduct(null);
+    setModalForm({
+      _id: '',
+      name: '',
+      price: '',
+      category: 'laptops',
+      description: '',
+      relatedTo: []
+    });
+    setFormError('');
+    setShowProductModal(true);
+  };
 
-  const displayLogs = logs.length > 0 ? logs : sampleFallbackLogs;
+  const handleOpenEditModal = (p) => {
+    setEditingProduct(p);
+    setModalForm({
+      _id: p._id,
+      name: p.name,
+      price: p.price,
+      category: p.category || 'accessories',
+      description: p.description || '',
+      relatedTo: p.relatedTo || []
+    });
+    setFormError('');
+    setShowProductModal(true);
+  };
+
+  const handleSaveProduct = async (e) => {
+    e.preventDefault();
+    setFormError('');
+
+    if (!modalForm.name.trim() || !modalForm.price) {
+      setFormError('Please enter both a product name and price.');
+      return;
+    }
+
+    try {
+      setActionLoading(true);
+      if (editingProduct) {
+        // Update existing product
+        await updateProduct(editingProduct._id, {
+          name: modalForm.name,
+          price: Number(modalForm.price),
+          category: modalForm.category,
+          description: modalForm.description,
+          relatedTo: modalForm.relatedTo
+        });
+      } else {
+        // Create new product
+        await createProduct({
+          _id: modalForm._id.trim() || undefined,
+          name: modalForm.name,
+          price: Number(modalForm.price),
+          category: modalForm.category,
+          description: modalForm.description,
+          relatedTo: modalForm.relatedTo
+        });
+      }
+      setShowProductModal(false);
+      await fetchData();
+    } catch (err) {
+      setFormError(err.message || 'Failed to save product.');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleDeleteProduct = async (id, name) => {
+    if (!window.confirm(`Are you sure you want to remove "${name}" from the active catalog?`)) {
+      return;
+    }
+
+    try {
+      await deleteProduct(id);
+      await fetchData();
+    } catch (err) {
+      alert(`Could not delete product: ${err.message}`);
+    }
+  };
+
+  const toggleRelatedProduct = (relId) => {
+    setModalForm(prev => {
+      const current = prev.relatedTo || [];
+      if (current.includes(relId)) {
+        return { ...prev, relatedTo: current.filter(id => id !== relId) };
+      } else {
+        return { ...prev, relatedTo: [...current, relId] };
+      }
+    });
+  };
+
+  const filteredProducts = products.filter(p =>
+    p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    p.category?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    p._id.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   const getActionIcon = (action = '') => {
     if (action.includes('search')) return <Search size={13} color="var(--slate)" />;
     if (action.includes('gate') || action.includes('policy')) return <ShieldCheck size={13} color="var(--sage)" />;
     if (action.includes('razorpay') || action.includes('order')) return <CreditCard size={13} color="var(--coral)" />;
+    if (action.includes('product')) return <Package size={13} color="var(--mustard)" />;
     if (action.includes('fail')) return <ShieldAlert size={13} color="var(--rust)" />;
     return <Activity size={13} color="var(--slate)" />;
   };
 
   return (
     <div style={styles.container}>
-      {/* Admin Nav */}
+      {/* Admin Nav Bar */}
       <div style={styles.adminNav}>
         <div style={styles.brandRow}>
           <div style={styles.shieldIconWrap}>
-            <ShieldCheck size={20} color="#fff" />
+            <ShieldCheck size={22} color="#fff" />
           </div>
-          <div style={styles.adminWordmark}>
-            Agent<span>Cart</span> · Autonomous Merchant Console
+          <div>
+            <div style={styles.adminWordmark}>
+              Agent<span>Cart</span> · Autonomous Merchant Console
+            </div>
+            <div style={styles.merchantMeta}>
+              Store Owner: <strong>{user?.name}</strong> ({user?.email}) • <span style={styles.verifiedBadge}>Verified Merchant</span>
+            </div>
           </div>
         </div>
 
-        <Link to="/" style={styles.adminBack}>
-          <ArrowLeft size={15} /> Back to Storefront
-        </Link>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <Link to="/" style={styles.adminBack}>
+            <ArrowLeft size={15} /> Storefront
+          </Link>
+          <button
+            onClick={() => {
+              logout();
+              window.location.href = '/login';
+            }}
+            style={styles.logoutBtn}
+          >
+            Sign Out
+          </button>
+        </div>
       </div>
 
-      {/* Admin Body */}
-      <div style={styles.adminBody}>
+      {/* Tabs Header */}
+      <div style={styles.tabsRow}>
+        <div style={styles.tabButtons}>
+          <button
+            onClick={() => setActiveTab('catalog')}
+            style={{
+              ...styles.tabBtn,
+              background: activeTab === 'catalog' ? 'var(--coral)' : 'var(--white)',
+              color: activeTab === 'catalog' ? '#fff' : 'var(--ink)'
+            }}
+          >
+            <Package size={16} />
+            <span>Product Catalog & Cross-Sells ({products.length})</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('audit')}
+            style={{
+              ...styles.tabBtn,
+              background: activeTab === 'audit' ? 'var(--coral)' : 'var(--white)',
+              color: activeTab === 'audit' ? '#fff' : 'var(--ink)'
+            }}
+          >
+            <Activity size={16} />
+            <span>Autonomous Gate & Audit Trail ({logs.length})</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('orders')}
+            style={{
+              ...styles.tabBtn,
+              background: activeTab === 'orders' ? 'var(--coral)' : 'var(--white)',
+              color: activeTab === 'orders' ? '#fff' : 'var(--ink)'
+            }}
+          >
+            <CreditCard size={16} />
+            <span>Store Orders ({orders.length})</span>
+          </button>
+        </div>
+
+        {activeTab === 'catalog' && (
+          <button onClick={handleOpenAddModal} style={styles.addBtn}>
+            <Plus size={16} />
+            <span>Add New Product</span>
+          </button>
+        )}
+      </div>
+
+      {/* ── TAB 1: PRODUCT CATALOG MANAGEMENT ──────────────────────────────── */}
+      {activeTab === 'catalog' && (
+        <div style={styles.panel}>
+          <div style={styles.panelHeader}>
+            <div style={styles.panelTitleRow}>
+              <Package size={20} color="var(--coral)" />
+              <h2 style={styles.panelTitle}>Active Electronics Inventory</h2>
+            </div>
+
+            <div style={styles.searchWrap}>
+              <Search size={15} color="var(--slate)" />
+              <input
+                type="text"
+                placeholder="Search products by name, slug or category..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                style={styles.searchInput}
+              />
+            </div>
+          </div>
+
+          {loading ? (
+            <div className="spinner" />
+          ) : filteredProducts.length === 0 ? (
+            <div className="empty-state">
+              <h3>No products found</h3>
+              <p>No inventory matched your search filter.</p>
+            </div>
+          ) : (
+            <div style={{ overflowX: 'auto' }}>
+              <table style={styles.table}>
+                <thead>
+                  <tr>
+                    <th style={styles.th}>Product Details</th>
+                    <th style={styles.th}>Category</th>
+                    <th style={styles.th}>Price</th>
+                    <th style={styles.th}>AI Cross-Sell Targets (`relatedTo`)</th>
+                    <th style={styles.th}>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredProducts.map((p) => (
+                    <tr key={p._id} style={styles.tr}>
+                      <td style={styles.td}>
+                        <div style={{ fontWeight: '600', color: 'var(--ink)', fontSize: '14px' }}>{p.name}</div>
+                        <div style={{ fontSize: '12px', color: 'var(--slate)', fontFamily: 'var(--font-mono)' }}>{p._id}</div>
+                      </td>
+                      <td style={styles.td}>
+                        <span style={styles.catBadge}>{p.category}</span>
+                      </td>
+                      <td style={{ ...styles.td, fontWeight: '700', color: 'var(--coral-dark)' }}>
+                        {formatPrice(p.price)}
+                      </td>
+                      <td style={styles.td}>
+                        {p.relatedTo && p.relatedTo.length > 0 ? (
+                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                            {p.relatedTo.map(relId => (
+                              <span key={relId} style={styles.relatedPill}>
+                                <Tag size={10} /> {relId.replace('prod_', '')}
+                              </span>
+                            ))}
+                          </div>
+                        ) : (
+                          <span style={{ fontSize: '12px', color: 'var(--slate)' }}>None linked</span>
+                        )}
+                      </td>
+                      <td style={styles.td}>
+                        <div style={{ display: 'flex', gap: '8px' }}>
+                          <button
+                            onClick={() => handleOpenEditModal(p)}
+                            style={styles.actionIconBtn}
+                            title="Edit product"
+                          >
+                            <Edit2 size={15} color="var(--slate)" />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteProduct(p._id, p.name)}
+                            style={{ ...styles.actionIconBtn, color: 'var(--rust)' }}
+                            title="Delete product"
+                          >
+                            <Trash2 size={15} color="var(--rust)" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── TAB 2: AUTONOMOUS GATE & AUDIT TRAIL ───────────────────────────── */}
+      {activeTab === 'audit' && (
         <div style={styles.adminGrid}>
-          {/* Recent Gate Decisions Table */}
+          {/* Audit Log Table */}
           <div style={styles.panel}>
             <div style={styles.panelHeader}>
               <div style={styles.panelTitleRow}>
                 <Activity size={18} color="var(--coral)" />
                 <h2 style={styles.panelTitle}>Autonomous Gate Audit Trail</h2>
               </div>
-              <span style={styles.logBadge}>
-                {displayLogs.length} events logged
-              </span>
+              <span style={styles.logBadge}>{logs.length} logged events</span>
             </div>
 
             {loading ? (
               <div className="spinner" />
+            ) : logs.length === 0 ? (
+              <div className="empty-state">
+                <h3>No audit events recorded yet</h3>
+                <p>Interact with the AI agent or run checkout tests to generate audit records.</p>
+              </div>
             ) : (
               <table style={styles.table}>
                 <thead>
                   <tr>
                     <th style={styles.th}>Timestamp</th>
                     <th style={styles.th}>Action</th>
-                    <th style={styles.th}>Audit Details</th>
+                    <th style={styles.th}>Customer</th>
+                    <th style={styles.th}>Audit Reason & Decision</th>
                     <th style={styles.th}>Gate Status</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {displayLogs.map((log, index) => {
+                  {logs.map((log, index) => {
                     const timeStr = formatTime(log.timestamp);
-                    const isFailure = /fail|invalid|declined|error/i.test(log.action || '') || log.ok === false;
+                    const isFailure = /fail|invalid|declined|error|blocked/i.test(log.action || '') || (log.result && log.result.approved === false);
                     const actionLabel = (log.action || 'gate_check').replace(/_/g, ' ');
                     const detail = typeof log.reason === 'string'
                       ? log.reason
-                      : JSON.stringify(log.reason || log.details || '').slice(0, 45);
+                      : JSON.stringify(log.reason || log.result || '').slice(0, 70);
 
                     return (
                       <tr key={log._id || index} style={styles.tr}>
@@ -114,10 +402,17 @@ export default function MerchantConsole() {
                         <td style={styles.td}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                             {getActionIcon(log.action)}
-                            <span style={{ textTransform: 'capitalize' }}>{actionLabel}</span>
+                            <span style={{ textTransform: 'capitalize', fontWeight: '500' }}>{actionLabel}</span>
                           </div>
                         </td>
-                        <td style={{ ...styles.td, ...styles.mono }}>{detail}</td>
+                        <td style={{ ...styles.td, fontSize: '12.5px' }}>
+                          {log.userId?.email ? (
+                            <span title={log.userId.email}>{log.userId.name || log.userId.email}</span>
+                          ) : (
+                            <span style={{ color: 'var(--slate)' }}>Guest / Store</span>
+                          )}
+                        </td>
+                        <td style={{ ...styles.td, fontSize: '13px' }}>{detail}</td>
                         <td style={styles.td}>
                           <span
                             className={`pill ${isFailure ? 'failed' : 'paid'}`}
@@ -125,7 +420,7 @@ export default function MerchantConsole() {
                           >
                             {isFailure ? (
                               <>
-                                <XCircle size={11} /> Blocked/Fail
+                                <XCircle size={11} /> Blocked/Declined
                               </>
                             ) : (
                               <>
@@ -142,127 +437,377 @@ export default function MerchantConsole() {
             )}
           </div>
 
-          {/* Policy Limits Sidebar */}
+          {/* Right Column: Policy Gate Rules Breakdown */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
             <div style={styles.panel}>
-              <div style={styles.panelTitleRow}>
-                <SlidersHorizontal size={18} color="var(--sage)" />
-                <h2 style={styles.panelTitle}>Autonomous Policy Limits</h2>
-              </div>
-
-              <div style={styles.limitList}>
-                <div style={styles.limitItem}>
-                  <div style={styles.limitLabelWrap}>
-                    <Lock size={14} color="var(--coral)" />
-                    <span>Max Order Value</span>
-                  </div>
-                  <span style={styles.limitVal}>₹5,000</span>
-                </div>
-
-                <div style={styles.limitItem}>
-                  <div style={styles.limitLabelWrap}>
-                    <Percent size={14} color="var(--mustard)" />
-                    <span>Max Allowed Discount</span>
-                  </div>
-                  <span style={styles.limitVal}>10%</span>
-                </div>
-
-                <div style={styles.limitItem}>
-                  <div style={styles.limitLabelWrap}>
-                    <CreditCard size={14} color="var(--sage)" />
-                    <span>Payment Approval</span>
-                  </div>
-                  <span style={{ ...styles.limitVal, color: 'var(--sage)' }}>Buyer Required</span>
-                </div>
-
-                <div style={styles.limitItem}>
-                  <div style={styles.limitLabelWrap}>
-                    <Sparkles size={14} color="var(--lavender)" />
-                    <span>Upsells Per Turn</span>
-                  </div>
-                  <span style={styles.limitVal}>1 Max</span>
+              <div style={styles.panelHeader}>
+                <div style={styles.panelTitleRow}>
+                  <SlidersHorizontal size={18} color="var(--sage)" />
+                  <h3 style={styles.panelTitle}>Hard Policy Rules</h3>
                 </div>
               </div>
-            </div>
 
-            <div style={styles.policyCard}>
-              <div style={styles.policyCardTitle}>
-                <ShieldCheck size={16} color="#3A6B45" />
-                <span>Zero-Hallucination Gate</span>
+              <div style={styles.policyList}>
+                <div style={styles.policyCard}>
+                  <div style={styles.policyCardHead}>
+                    <div style={styles.ruleIconWrap}>
+                      <Lock size={15} color="var(--sage)" />
+                    </div>
+                    <div>
+                      <div style={styles.policyName}>Max Single Order Cap</div>
+                      <div style={styles.policyDesc}>Blocks orders exceeding autonomous limit</div>
+                    </div>
+                  </div>
+                  <div style={styles.policyValue}>₹5,000</div>
+                </div>
+
+                <div style={styles.policyCard}>
+                  <div style={styles.policyCardHead}>
+                    <div style={styles.ruleIconWrap}>
+                      <Percent size={15} color="var(--coral)" />
+                    </div>
+                    <div>
+                      <div style={styles.policyName}>Max Dynamic Discount</div>
+                      <div style={styles.policyDesc}>Agent ceiling for bundled cross-sells</div>
+                    </div>
+                  </div>
+                  <div style={styles.policyValue}>10%</div>
+                </div>
+
+                <div style={styles.policyCard}>
+                  <div style={styles.policyCardHead}>
+                    <div style={styles.ruleIconWrap}>
+                      <ShieldCheck size={15} color="var(--mustard)" />
+                    </div>
+                    <div>
+                      <div style={styles.policyName}>Buyer Confirmation</div>
+                      <div style={styles.policyDesc}>Explicit click required for all charges</div>
+                    </div>
+                  </div>
+                  <div style={styles.policyStatusPill}>Mandatory</div>
+                </div>
               </div>
-              <p style={styles.policyCardDesc}>
-                Orders are calculated strictly by the deterministic policy service on every payment request, bypassing agent calculations.
-              </p>
             </div>
           </div>
         </div>
-      </div>
+      )}
+
+      {/* ── TAB 3: ALL ORDERS FEED ─────────────────────────────────────────── */}
+      {activeTab === 'orders' && (
+        <div style={styles.panel}>
+          <div style={styles.panelHeader}>
+            <div style={styles.panelTitleRow}>
+              <CreditCard size={20} color="var(--coral)" />
+              <h2 style={styles.panelTitle}>Real-time Order Transactions</h2>
+            </div>
+            <span style={styles.logBadge}>{orders.length} total orders</span>
+          </div>
+
+          {loading ? (
+            <div className="spinner" />
+          ) : orders.length === 0 ? (
+            <div className="empty-state">
+              <h3>No store orders yet</h3>
+              <p>When buyers checkout, transactions will appear here live.</p>
+            </div>
+          ) : (
+            <table style={styles.table}>
+              <thead>
+                <tr>
+                  <th style={styles.th}>Order ID</th>
+                  <th style={styles.th}>Customer</th>
+                  <th style={styles.th}>Items</th>
+                  <th style={styles.th}>Total</th>
+                  <th style={styles.th}>Status</th>
+                  <th style={styles.th}>Date</th>
+                </tr>
+              </thead>
+              <tbody>
+                {orders.map((o) => (
+                  <tr key={o._id} style={styles.tr}>
+                    <td style={{ ...styles.td, ...styles.mono }}>#{String(o._id).slice(-8).toUpperCase()}</td>
+                    <td style={styles.td}>
+                      <div style={{ fontWeight: '600' }}>{o.userId?.name || 'Customer'}</div>
+                      <div style={{ fontSize: '12px', color: 'var(--slate)' }}>{o.userEmail || o.userId?.email || 'N/A'}</div>
+                    </td>
+                    <td style={styles.td}>
+                      {(o.items || []).map(i => `${i.name} (×${i.qty || 1})`).join(', ')}
+                    </td>
+                    <td style={{ ...styles.td, fontWeight: '700', color: 'var(--ink)' }}>
+                      {formatPrice(o.total)}
+                    </td>
+                    <td style={styles.td}>
+                      <span className={`pill ${o.status === 'paid' ? 'paid' : o.status === 'failed' ? 'failed' : 'created'}`}>
+                        {o.status?.toUpperCase()}
+                      </span>
+                    </td>
+                    <td style={{ ...styles.td, fontSize: '12px', color: 'var(--slate)' }}>
+                      {formatDate(o.createdAt)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      )}
+
+      {/* ── ADD / EDIT PRODUCT MODAL ────────────────────────────────────────── */}
+      {showProductModal && (
+        <div style={styles.modalOverlay}>
+          <div style={styles.modalCard}>
+            <div style={styles.modalHeader}>
+              <h3 style={styles.modalTitle}>
+                {editingProduct ? 'Edit Catalog Product' : 'Add New Electronics Item'}
+              </h3>
+              <button onClick={() => setShowProductModal(false)} style={styles.closeBtn}>
+                <X size={18} />
+              </button>
+            </div>
+
+            {formError && (
+              <div style={styles.errorBanner}>
+                <ShieldAlert size={16} />
+                <span>{formError}</span>
+              </div>
+            )}
+
+            <form onSubmit={handleSaveProduct} style={styles.modalForm}>
+              <div style={styles.formRow}>
+                <div style={styles.field}>
+                  <label style={styles.label}>Product Name *</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Sony WH-1000XM5 ANC Headphones"
+                    value={modalForm.name}
+                    onChange={(e) => setModalForm({ ...modalForm, name: e.target.value })}
+                    style={styles.input}
+                  />
+                </div>
+
+                <div style={styles.field}>
+                  <label style={styles.label}>Price (₹ INR) *</label>
+                  <input
+                    type="number"
+                    required
+                    placeholder="e.g. 29999"
+                    value={modalForm.price}
+                    onChange={(e) => setModalForm({ ...modalForm, price: e.target.value })}
+                    style={styles.input}
+                  />
+                </div>
+              </div>
+
+              <div style={styles.formRow}>
+                <div style={styles.field}>
+                  <label style={styles.label}>Category *</label>
+                  <select
+                    value={modalForm.category}
+                    onChange={(e) => setModalForm({ ...modalForm, category: e.target.value })}
+                    style={styles.select}
+                  >
+                    <option value="laptops">Laptops & Workspace</option>
+                    <option value="smartphones">Smartphones</option>
+                    <option value="audio">Audio & Hi-Fi</option>
+                    <option value="wearables">Wearables & Watches</option>
+                    <option value="cameras">Cameras & Creator Gear</option>
+                    <option value="charging">Power & Charging</option>
+                    <option value="accessories">Accessories</option>
+                  </select>
+                </div>
+
+                {!editingProduct && (
+                  <div style={styles.field}>
+                    <label style={styles.label}>Product Slug / ID (optional)</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. prod_sony_headphones"
+                      value={modalForm._id}
+                      onChange={(e) => setModalForm({ ...modalForm, _id: e.target.value })}
+                      style={styles.input}
+                    />
+                  </div>
+                )}
+              </div>
+
+              <div style={styles.field}>
+                <label style={styles.label}>Description</label>
+                <textarea
+                  rows={2}
+                  placeholder="Key features, specs, and details for the AI agent to ground its answers on..."
+                  value={modalForm.description}
+                  onChange={(e) => setModalForm({ ...modalForm, description: e.target.value })}
+                  style={{ ...styles.input, resize: 'vertical' }}
+                />
+              </div>
+
+              <div style={styles.field}>
+                <label style={styles.label}>
+                  AI Cross-Sell Targets (`relatedTo`): select products the AI should recommend alongside this item
+                </label>
+                <div style={styles.pickerBox}>
+                  {products
+                    .filter(p => !editingProduct || p._id !== editingProduct._id)
+                    .map(p => {
+                      const isSelected = (modalForm.relatedTo || []).includes(p._id);
+                      return (
+                        <div
+                          key={p._id}
+                          onClick={() => toggleRelatedProduct(p._id)}
+                          style={{
+                            ...styles.pickerItem,
+                            background: isSelected ? 'var(--coral)' : 'var(--cream)',
+                            color: isSelected ? '#fff' : 'var(--ink)',
+                            borderColor: isSelected ? 'var(--coral)' : 'var(--sand)'
+                          }}
+                        >
+                          <span style={{ fontSize: '12px', fontWeight: '600' }}>{p.name}</span>
+                          <span style={{ fontSize: '11px', opacity: 0.8 }}>({formatPrice(p.price)})</span>
+                        </div>
+                      );
+                    })}
+                </div>
+              </div>
+
+              <div style={styles.modalActions}>
+                <button
+                  type="button"
+                  onClick={() => setShowProductModal(false)}
+                  style={styles.cancelBtn}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={actionLoading}
+                  style={styles.submitBtn}
+                >
+                  {actionLoading ? 'Saving...' : editingProduct ? 'Save Changes' : 'Create Product'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
 const styles = {
   container: {
-    minHeight: '100vh',
-    background: 'var(--cream)',
-    display: 'flex',
-    flexDirection: 'column'
+    maxWidth: '1280px',
+    margin: '0 auto',
+    padding: '24px 20px 80px'
   },
   adminNav: {
-    background: 'var(--ink-2)',
-    color: '#ffffff',
-    padding: '16px 32px',
     display: 'flex',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    boxShadow: '0 4px 20px rgba(0, 0, 0, 0.15)'
+    justifyContent: 'space-between',
+    background: 'var(--white)',
+    borderRadius: '20px',
+    padding: '16px 24px',
+    marginBottom: '24px',
+    boxShadow: 'var(--shadow-sm)',
+    border: '1px solid rgba(239, 232, 218, 0.9)'
   },
   brandRow: {
     display: 'flex',
     alignItems: 'center',
-    gap: '12px'
+    gap: '14px'
   },
   shieldIconWrap: {
-    width: '34px',
-    height: '34px',
-    borderRadius: '10px',
-    background: 'linear-gradient(135deg, var(--sage), #6e9477)',
+    width: '44px',
+    height: '44px',
+    borderRadius: '12px',
+    background: 'linear-gradient(135deg, var(--sage), #4c6b54)',
     display: 'flex',
     alignItems: 'center',
-    justifyContent: 'center'
+    justifyContent: 'center',
+    boxShadow: '0 4px 12px rgba(92, 126, 100, 0.3)'
   },
   adminWordmark: {
     fontFamily: 'var(--font-brand)',
-    fontSize: '19px',
+    fontSize: '20px',
+    fontWeight: '700',
+    color: 'var(--ink)'
+  },
+  merchantMeta: {
+    fontSize: '12.5px',
+    color: 'var(--slate)',
+    marginTop: '2px'
+  },
+  verifiedBadge: {
+    color: 'var(--sage)',
     fontWeight: '700'
   },
   adminBack: {
-    fontSize: '13px',
-    fontWeight: '600',
-    color: 'var(--sage)',
-    textDecoration: 'none',
-    display: 'flex',
+    display: 'inline-flex',
     alignItems: 'center',
     gap: '6px',
-    padding: '6px 12px',
-    borderRadius: '8px',
-    background: 'rgba(255, 255, 255, 0.08)',
+    fontSize: '13.5px',
+    fontWeight: '600',
+    color: 'var(--ink)',
+    textDecoration: 'none',
+    background: 'var(--cream)',
+    padding: '8px 14px',
+    borderRadius: '10px',
+    transition: 'background 0.15s ease'
+  },
+  logoutBtn: {
+    background: 'transparent',
+    border: '1px solid var(--sand)',
+    padding: '8px 14px',
+    borderRadius: '10px',
+    fontSize: '13.5px',
+    fontWeight: '600',
+    color: 'var(--rust)',
+    cursor: 'pointer'
+  },
+  tabsRow: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: '20px',
+    flexWrap: 'wrap',
+    gap: '12px'
+  },
+  tabButtons: {
+    display: 'flex',
+    gap: '10px',
+    flexWrap: 'wrap'
+  },
+  tabBtn: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '8px',
+    padding: '10px 18px',
+    borderRadius: '12px',
+    fontSize: '13.5px',
+    fontWeight: '600',
+    border: '1px solid var(--sand)',
+    cursor: 'pointer',
+    boxShadow: 'var(--shadow-sm)',
     transition: 'all 0.15s ease'
   },
-  adminBody: {
-    padding: '32px',
-    maxWidth: '1320px',
-    margin: '0 auto',
-    width: '100%'
-  },
-  adminGrid: {
-    display: 'grid',
-    gridTemplateColumns: '1fr 340px',
-    gap: '24px'
+  addBtn: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '8px',
+    padding: '10px 18px',
+    borderRadius: '12px',
+    background: 'var(--sage)',
+    color: '#fff',
+    border: 'none',
+    fontSize: '13.5px',
+    fontWeight: '600',
+    cursor: 'pointer',
+    boxShadow: '0 3px 10px rgba(92, 126, 100, 0.25)',
+    transition: 'all 0.15s ease'
   },
   panel: {
     background: 'var(--white)',
-    borderRadius: '22px',
+    borderRadius: '24px',
     padding: '24px',
     boxShadow: 'var(--shadow-sm)',
     border: '1px solid rgba(239, 232, 218, 0.9)'
@@ -271,104 +816,313 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: '20px'
+    marginBottom: '20px',
+    flexWrap: 'wrap',
+    gap: '12px'
   },
   panelTitleRow: {
     display: 'flex',
     alignItems: 'center',
-    gap: '8px',
-    marginBottom: '16px'
+    gap: '10px'
   },
   panelTitle: {
-    fontFamily: 'var(--font-brand)',
     fontSize: '18px',
     fontWeight: '700',
-    color: 'var(--ink)'
+    color: 'var(--ink)',
+    margin: 0
   },
-  logBadge: {
-    fontSize: '11px',
-    fontWeight: '700',
+  searchWrap: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
     background: 'var(--cream)',
-    color: 'var(--slate)',
-    padding: '4px 10px',
-    borderRadius: '20px'
+    padding: '8px 14px',
+    borderRadius: '10px',
+    width: '320px',
+    border: '1px solid var(--sand)'
+  },
+  searchInput: {
+    border: 'none',
+    background: 'transparent',
+    outline: 'none',
+    fontSize: '13px',
+    color: 'var(--ink)',
+    width: '100%'
   },
   table: {
     width: '100%',
-    borderCollapse: 'collapse'
+    borderCollapse: 'collapse',
+    fontSize: '13.5px'
   },
   th: {
-    fontSize: '11px',
-    textTransform: 'uppercase',
-    letterSpacing: '0.05em',
-    color: 'var(--slate)',
     textAlign: 'left',
-    padding: '10px 8px',
-    borderBottom: '1.5px solid var(--border)'
+    padding: '12px 14px',
+    background: 'var(--cream)',
+    color: 'var(--slate)',
+    fontSize: '11.5px',
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: '0.04em',
+    borderBottom: '1px solid var(--border)'
   },
   tr: {
-    transition: 'background 0.15s ease'
+    borderBottom: '1px solid var(--border)',
+    transition: 'background 0.1s ease'
   },
   td: {
-    fontSize: '12.5px',
-    padding: '12px 8px',
-    borderBottom: '1px solid var(--border)',
-    color: 'var(--ink)'
+    padding: '14px',
+    color: 'var(--ink)',
+    verticalAlign: 'middle'
   },
   mono: {
     fontFamily: 'var(--font-mono)',
-    fontSize: '11.5px',
+    fontSize: '12px'
+  },
+  catBadge: {
+    display: 'inline-block',
+    padding: '3px 8px',
+    borderRadius: '6px',
+    background: 'var(--cream)',
+    fontSize: '11px',
+    fontWeight: '700',
+    textTransform: 'uppercase',
     color: 'var(--slate)'
   },
-  tablePill: {
+  relatedPill: {
     display: 'inline-flex',
     alignItems: 'center',
     gap: '4px',
-    fontSize: '11px',
-    fontWeight: '700'
+    padding: '2px 7px',
+    borderRadius: '6px',
+    background: 'var(--cream)',
+    fontSize: '11.5px',
+    color: 'var(--ink)',
+    border: '1px solid var(--sand)'
   },
-  limitList: {
+  actionIconBtn: {
+    width: '32px',
+    height: '32px',
+    borderRadius: '8px',
+    background: 'var(--cream)',
+    border: '1px solid var(--sand)',
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    cursor: 'pointer'
+  },
+  logBadge: {
+    fontSize: '12px',
+    fontWeight: '600',
+    color: 'var(--slate)',
+    background: 'var(--cream)',
+    padding: '4px 10px',
+    borderRadius: '20px'
+  },
+  adminGrid: {
+    display: 'grid',
+    gridTemplateColumns: '2fr 1fr',
+    gap: '24px'
+  },
+  policyList: {
     display: 'flex',
     flexDirection: 'column',
     gap: '12px'
   },
-  limitItem: {
+  policyCard: {
     display: 'flex',
+    alignItems: 'center',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    fontSize: '13px',
-    padding: '10px 0',
-    borderBottom: '1px solid var(--border)'
+    padding: '14px',
+    borderRadius: '14px',
+    background: 'var(--cream)',
+    border: '1px solid var(--sand)'
   },
-  limitLabelWrap: {
+  policyCardHead: {
     display: 'flex',
     alignItems: 'center',
-    gap: '8px',
-    fontWeight: '500',
+    gap: '10px'
+  },
+  ruleIconWrap: {
+    width: '32px',
+    height: '32px',
+    borderRadius: '8px',
+    background: 'var(--white)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    boxShadow: 'var(--shadow-sm)'
+  },
+  policyName: {
+    fontSize: '13px',
+    fontWeight: '700',
     color: 'var(--ink)'
   },
-  limitVal: {
+  policyDesc: {
+    fontSize: '11px',
+    color: 'var(--slate)'
+  },
+  policyValue: {
+    fontFamily: 'var(--font-brand)',
+    fontSize: '16px',
     fontWeight: '700',
     color: 'var(--coral-dark)'
   },
-  policyCard: {
-    background: 'var(--sage-bg)',
-    borderRadius: '18px',
-    padding: '18px',
-    border: '1px solid rgba(143, 175, 151, 0.3)'
+  policyStatusPill: {
+    fontSize: '11px',
+    fontWeight: '700',
+    background: 'var(--sage)',
+    color: '#fff',
+    padding: '4px 8px',
+    borderRadius: '6px'
   },
-  policyCardTitle: {
+  tablePill: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '4px'
+  },
+  modalOverlay: {
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    background: 'rgba(29, 32, 43, 0.6)',
+    backdropFilter: 'blur(4px)',
     display: 'flex',
     alignItems: 'center',
-    gap: '6px',
-    fontSize: '13px',
-    fontWeight: '700',
-    color: '#3A6B45',
-    marginBottom: '6px'
+    justifyContent: 'center',
+    zIndex: 200,
+    padding: '20px'
   },
-  policyCardDesc: {
-    fontSize: '12px',
-    lineHeight: '1.5',
+  modalCard: {
+    background: 'var(--white)',
+    borderRadius: '24px',
+    padding: '28px',
+    width: '100%',
+    maxWidth: '620px',
+    maxHeight: '90vh',
+    overflowY: 'auto',
+    boxShadow: 'var(--shadow-lg)',
+    border: '1px solid rgba(239, 232, 218, 0.95)'
+  },
+  modalHeader: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: '20px'
+  },
+  modalTitle: {
+    fontSize: '20px',
+    fontWeight: '700',
+    color: 'var(--ink)',
+    margin: 0
+  },
+  closeBtn: {
+    background: 'var(--cream)',
+    border: 'none',
+    borderRadius: '50%',
+    width: '32px',
+    height: '32px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    cursor: 'pointer'
+  },
+  errorBanner: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    background: '#fff2f0',
+    color: '#cf1322',
+    padding: '10px 14px',
+    borderRadius: '10px',
+    fontSize: '13px',
+    marginBottom: '16px'
+  },
+  modalForm: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '16px'
+  },
+  formRow: {
+    display: 'grid',
+    gridTemplateColumns: '1fr 1fr',
+    gap: '14px'
+  },
+  field: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '6px'
+  },
+  label: {
+    fontSize: '12.5px',
+    fontWeight: '600',
     color: 'var(--ink)'
+  },
+  input: {
+    padding: '10px 14px',
+    borderRadius: '10px',
+    border: '1.5px solid var(--sand)',
+    background: 'var(--cream)',
+    fontSize: '13.5px',
+    color: 'var(--ink)',
+    outline: 'none'
+  },
+  select: {
+    padding: '10px 14px',
+    borderRadius: '10px',
+    border: '1.5px solid var(--sand)',
+    background: 'var(--cream)',
+    fontSize: '13.5px',
+    color: 'var(--ink)',
+    outline: 'none'
+  },
+  pickerBox: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    gap: '8px',
+    maxHeight: '140px',
+    overflowY: 'auto',
+    padding: '10px',
+    borderRadius: '10px',
+    background: 'var(--cream)',
+    border: '1px solid var(--sand)'
+  },
+  pickerItem: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '6px',
+    padding: '6px 10px',
+    borderRadius: '8px',
+    border: '1px solid',
+    cursor: 'pointer',
+    transition: 'all 0.12s ease'
+  },
+  modalActions: {
+    display: 'flex',
+    justifyContent: 'flex-end',
+    gap: '10px',
+    marginTop: '10px'
+  },
+  cancelBtn: {
+    padding: '10px 18px',
+    borderRadius: '10px',
+    background: 'var(--cream)',
+    border: '1px solid var(--sand)',
+    fontSize: '13.5px',
+    fontWeight: '600',
+    color: 'var(--ink)',
+    cursor: 'pointer'
+  },
+  submitBtn: {
+    padding: '10px 20px',
+    borderRadius: '10px',
+    background: 'var(--coral)',
+    border: 'none',
+    fontSize: '13.5px',
+    fontWeight: '600',
+    color: '#fff',
+    cursor: 'pointer',
+    boxShadow: '0 4px 12px rgba(240, 101, 74, 0.3)'
   }
 };

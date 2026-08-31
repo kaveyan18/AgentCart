@@ -5,12 +5,13 @@ const { reviewOrder } = require('../services/policyGate');
 const { createRazorpayOrder } = require('../services/razorpayService');
 const { writeLog } = require('../services/auditService');
 const { requireAuth, optionalAuth } = require('../middleware/requireAuth');
+const requireMerchant = require('../middleware/requireMerchant');
 const Order = require('../models/Order');
 const AuditLog = require('../models/AuditLog');
 const User = require('../models/User');
 
-// 1. Audit log endpoint for merchant console (must come before /:id)
-router.get('/audit', async (req, res) => {
+// 1. Audit log endpoint for merchant console (must come before /:id) — Merchant Protected
+router.get('/audit', requireMerchant, async (req, res) => {
   try {
     const logs = await AuditLog.find()
       .populate('userId', 'name email')
@@ -22,8 +23,8 @@ router.get('/audit', async (req, res) => {
   }
 });
 
-// 2. All orders for merchant console
-router.get('/all', async (req, res) => {
+// 2. All orders for merchant console — Merchant Protected
+router.get('/all', requireMerchant, async (req, res) => {
   try {
     const orders = await Order.find()
       .populate('userId', 'name email')

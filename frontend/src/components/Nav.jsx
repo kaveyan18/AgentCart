@@ -14,6 +14,8 @@ export default function Nav() {
     navigate('/');
   };
 
+  const isMerchant = user?.role === 'merchant';
+
   return (
     <nav style={styles.nav}>
       <Link to="/" style={styles.brandGroup}>
@@ -55,7 +57,9 @@ export default function Nav() {
           })}
         >
           <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
-            <ShieldCheck size={15} color="var(--sage)" /> Merchant Console
+            <ShieldCheck size={15} color={isMerchant ? 'var(--sage)' : 'var(--slate)'} />
+            <span>Merchant Console</span>
+            {isMerchant && <span style={styles.merchantMiniBadge}>Owner</span>}
           </span>
         </NavLink>
       </div>
@@ -70,12 +74,20 @@ export default function Nav() {
             <button
               type="button"
               onClick={() => setDropdownOpen(!dropdownOpen)}
-              style={styles.userProfileBtn}
+              style={{
+                ...styles.userProfileBtn,
+                borderColor: isMerchant ? 'var(--sage)' : 'var(--sand)'
+              }}
             >
-              <div style={styles.userAvatar}>
+              <div style={{
+                ...styles.userAvatar,
+                background: isMerchant ? 'var(--sage)' : 'var(--coral)'
+              }}>
                 {user?.name ? user.name[0].toUpperCase() : 'U'}
               </div>
-              <span style={styles.userName}>{user?.name?.split(' ')[0] || 'Account'}</span>
+              <div style={{ textAlign: 'left' }}>
+                <div style={styles.userName}>{user?.name?.split(' ')[0] || 'Account'}</div>
+              </div>
               <ChevronDown size={14} color="var(--slate)" />
             </button>
 
@@ -87,7 +99,16 @@ export default function Nav() {
                 />
                 <div style={styles.dropdown}>
                   <div style={styles.dropdownHeader}>
-                    <div style={styles.dropdownName}>{user?.name}</div>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <div style={styles.dropdownName}>{user?.name}</div>
+                      <span style={{
+                        ...styles.roleTag,
+                        background: isMerchant ? 'var(--sage-bg)' : 'var(--cream)',
+                        color: isMerchant ? 'var(--sage)' : 'var(--slate)'
+                      }}>
+                        {isMerchant ? '👑 Merchant' : '👤 Customer'}
+                      </span>
+                    </div>
                     <div style={styles.dropdownEmail}>{user?.email}</div>
                   </div>
                   <div style={styles.divider} />
@@ -183,6 +204,15 @@ const styles = {
     transition: 'color 0.15s ease',
     padding: '6px 4px'
   },
+  merchantMiniBadge: {
+    fontSize: '10px',
+    fontWeight: '700',
+    background: 'var(--sage)',
+    color: '#fff',
+    padding: '2px 6px',
+    borderRadius: '6px',
+    textTransform: 'uppercase'
+  },
   actions: {
     display: 'flex',
     alignItems: 'center',
@@ -208,7 +238,7 @@ const styles = {
     padding: '5px 12px 5px 6px',
     borderRadius: '24px',
     background: 'var(--cream)',
-    border: '1px solid var(--sand)',
+    border: '1.5px solid var(--sand)',
     cursor: 'pointer',
     transition: 'all 0.15s ease'
   },
@@ -216,7 +246,6 @@ const styles = {
     width: '28px',
     height: '28px',
     borderRadius: '50%',
-    background: 'var(--coral)',
     color: '#fff',
     fontSize: '13px',
     fontWeight: '700',
@@ -241,7 +270,7 @@ const styles = {
     position: 'absolute',
     top: 'calc(100% + 10px)',
     right: 0,
-    width: '220px',
+    width: '240px',
     background: 'var(--white)',
     borderRadius: '16px',
     boxShadow: 'var(--shadow-lg)',
@@ -257,6 +286,12 @@ const styles = {
     fontSize: '14px',
     fontWeight: '700',
     color: 'var(--ink)'
+  },
+  roleTag: {
+    fontSize: '11px',
+    fontWeight: '700',
+    padding: '2px 6px',
+    borderRadius: '6px'
   },
   dropdownEmail: {
     fontSize: '12px',

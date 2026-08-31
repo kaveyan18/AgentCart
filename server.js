@@ -33,15 +33,5 @@ app.use('/api/products', productRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/chat', chatRoutes);
 
-// Audit log shortcut for merchant console if called via /api/audit
-app.get('/api/audit', async (req, res) => {
-  try {
-    const logs = await AuditLog.find().sort({ timestamp: -1 }).limit(50);
-    res.json(logs);
-  } catch (err) {
-    res.status(500).json({ error: 'Could not fetch audit logs' });
-  }
-});
-
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

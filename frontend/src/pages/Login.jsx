@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Sparkles, Mail, Lock, ArrowRight, AlertCircle } from 'lucide-react';
+import { Sparkles, Mail, Lock, ArrowRight, AlertCircle, ShieldCheck, UserCheck } from 'lucide-react';
 import Nav from '../components/Nav';
 
 export default function Login() {
@@ -13,10 +13,10 @@ export default function Login() {
   const { login } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const redirect = searchParams.get('redirect') || '/';
+  const redirectParam = searchParams.get('redirect');
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
+    e?.preventDefault();
     setError('');
 
     if (!email || !password) {
@@ -26,13 +26,27 @@ export default function Login() {
 
     setLoading(true);
     try {
-      await login(email, password);
-      navigate(redirect);
+      const user = await login(email, password);
+
+      // Role-based redirect
+      if (redirectParam) {
+        navigate(redirectParam);
+      } else if (user?.role === 'merchant') {
+        navigate('/admin');
+      } else {
+        navigate('/');
+      }
     } catch (err) {
       setError(err.message || 'Login failed. Please check your credentials.');
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleDemoFill = (demoEmail, demoPassword) => {
+    setEmail(demoEmail);
+    setPassword(demoPassword);
+    setError('');
   };
 
   return (
@@ -45,8 +59,31 @@ export default function Login() {
             <div style={styles.iconBadge}>
               <Sparkles size={20} color="#fff" />
             </div>
-            <h1 style={styles.title}>Welcome back</h1>
-            <p style={styles.subtitle}>Sign in to access your orders and checkout seamlessly</p>
+            <h1 style={styles.title}>Sign In to AgentCart</h1>
+            <p style={styles.subtitle}>Access your customer orders or merchant management console</p>
+          </div>
+
+          {/* Demo Account Quick-Fill Buttons */}
+          <div style={styles.demoBox}>
+            <div style={styles.demoTitle}>🚀 Demo Accounts:</div>
+            <div style={styles.demoButtons}>
+              <button
+                type="button"
+                onClick={() => handleDemoFill('merchant@parcel.test', 'demo1234')}
+                style={styles.demoBtn}
+              >
+                <ShieldCheck size={14} color="var(--sage)" />
+                <span>Store Merchant</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => handleDemoFill('buyer@parcel.test', 'demo1234')}
+                style={styles.demoBtn}
+              >
+                <UserCheck size={14} color="var(--coral)" />
+                <span>Demo Buyer</span>
+              </button>
+            </div>
           </div>
 
           {error && (
@@ -88,14 +125,14 @@ export default function Login() {
             </div>
 
             <button type="submit" disabled={loading} style={styles.submitBtn}>
-              {loading ? 'Signing in...' : 'Sign in'}
+              {loading ? 'Authenticating...' : 'Sign in'}
               {!loading && <ArrowRight size={17} />}
             </button>
           </form>
 
           <div style={styles.footer}>
             <span>Don't have an account?</span>{' '}
-            <Link to={`/signup?redirect=${encodeURIComponent(redirect)}`} style={styles.link}>
+            <Link to={`/signup${redirectParam ? `?redirect=${encodeURIComponent(redirectParam)}` : ''}`} style={styles.link}>
               Create one now
             </Link>
           </div>
@@ -115,20 +152,20 @@ const styles = {
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
-    padding: '40px 0'
+    padding: '30px 0'
   },
   card: {
     background: 'var(--white)',
     borderRadius: '24px',
-    padding: '40px',
+    padding: '36px 40px',
     width: '100%',
-    maxWidth: '440px',
+    maxWidth: '450px',
     boxShadow: 'var(--shadow-md)',
     border: '1px solid rgba(239, 232, 218, 0.9)'
   },
   header: {
     textAlign: 'center',
-    marginBottom: '28px'
+    marginBottom: '20px'
   },
   iconBadge: {
     width: '44px',
@@ -143,16 +180,51 @@ const styles = {
   },
   title: {
     fontFamily: 'var(--font-brand)',
-    fontSize: '26px',
+    fontSize: '24px',
     fontWeight: '700',
     color: 'var(--ink)',
-    margin: '0 0 8px 0'
+    margin: '0 0 6px 0'
   },
   subtitle: {
-    fontSize: '14px',
+    fontSize: '13.5px',
     color: 'var(--slate)',
     margin: 0,
-    lineHeight: '1.5'
+    lineHeight: '1.4'
+  },
+  demoBox: {
+    background: 'var(--cream)',
+    borderRadius: '14px',
+    padding: '12px 14px',
+    marginBottom: '20px',
+    border: '1px solid var(--sand)'
+  },
+  demoTitle: {
+    fontSize: '11.5px',
+    fontWeight: '700',
+    color: 'var(--ink)',
+    marginBottom: '8px',
+    textTransform: 'uppercase',
+    letterSpacing: '0.04em'
+  },
+  demoButtons: {
+    display: 'flex',
+    gap: '8px'
+  },
+  demoBtn: {
+    flex: 1,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '6px',
+    padding: '7px 10px',
+    borderRadius: '8px',
+    background: 'var(--white)',
+    border: '1px solid var(--sand)',
+    fontSize: '12px',
+    fontWeight: '600',
+    color: 'var(--ink)',
+    cursor: 'pointer',
+    transition: 'all 0.15s ease'
   },
   errorBox: {
     display: 'flex',
@@ -164,12 +236,12 @@ const styles = {
     padding: '12px 16px',
     borderRadius: '12px',
     fontSize: '13.5px',
-    marginBottom: '20px'
+    marginBottom: '18px'
   },
   form: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '20px'
+    gap: '18px'
   },
   field: {
     display: 'flex',
@@ -216,12 +288,12 @@ const styles = {
     fontSize: '15px',
     fontWeight: '600',
     cursor: 'pointer',
-    marginTop: '6px',
+    marginTop: '4px',
     boxShadow: '0 4px 14px rgba(240, 101, 74, 0.3)',
     transition: 'all 0.2s ease'
   },
   footer: {
-    marginTop: '24px',
+    marginTop: '20px',
     textAlign: 'center',
     fontSize: '13.5px',
     color: 'var(--slate)'

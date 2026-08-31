@@ -267,6 +267,31 @@ async function seed() {
       const count = inserted.filter(p => p.category === cat).length;
       console.log(`   📂 ${cat.toUpperCase()}: ${count} products`);
     });
+
+    // ── Seed Accounts ───────────────────────────────────────────────────────────
+    const bcrypt = require('bcryptjs');
+    const User = require('../models/User');
+
+    await User.deleteMany({ email: { $in: ['merchant@parcel.test', 'buyer@parcel.test'] } });
+
+    const merchantHash = await bcrypt.hash('demo1234', 10);
+    const merchantUser = await User.create({
+      name: 'Store Owner',
+      email: 'merchant@parcel.test',
+      passwordHash: merchantHash,
+      role: 'merchant'
+    });
+    console.log(`\n👑  Seeded Merchant Account: ${merchantUser.email} (password: demo1234, role: ${merchantUser.role})`);
+
+    const buyerHash = await bcrypt.hash('demo1234', 10);
+    const buyerUser = await User.create({
+      name: 'Alex Rivera',
+      email: 'buyer@parcel.test',
+      passwordHash: buyerHash,
+      role: 'buyer'
+    });
+    console.log(`👤  Seeded Buyer Account:    ${buyerUser.email} (password: demo1234, role: ${buyerUser.role})`);
+
   } catch (err) {
     console.error("❌  Seed failed:", err.message);
     process.exit(1);

@@ -52,10 +52,10 @@ async function request(path, options = {}) {
 }
 
 // ── 1. Auth ───────────────────────────────────────────────────────────────────
-export async function registerUser({ name, email, password }) {
+export async function registerUser({ name, email, password, role }) {
   return request('/auth/register', {
     method: 'POST',
-    body: JSON.stringify({ name, email, password })
+    body: JSON.stringify({ name, email, password, role })
   });
 }
 
@@ -70,13 +70,33 @@ export async function getCurrentUser() {
   return request('/auth/me');
 }
 
-// ── 2. Products ───────────────────────────────────────────────────────────────
+// ── 2. Products (Public & Merchant Management) ────────────────────────────────
 export async function getProducts() {
   return request('/products');
 }
 
 export async function getProductById(id) {
   return request(`/products/${id}`);
+}
+
+export async function createProduct(productData) {
+  return request('/products', {
+    method: 'POST',
+    body: JSON.stringify(productData)
+  });
+}
+
+export async function updateProduct(id, productData) {
+  return request(`/products/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(productData)
+  });
+}
+
+export async function deleteProduct(id) {
+  return request(`/products/${id}`, {
+    method: 'DELETE'
+  });
 }
 
 // ── 3. Chat with AI Agent ────────────────────────────────────────────────────

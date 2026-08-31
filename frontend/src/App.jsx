@@ -10,6 +10,7 @@ import MerchantConsole from './pages/MerchantConsole';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import ProtectedRoute from './components/ProtectedRoute';
+import MerchantRoute from './components/MerchantRoute';
 import ChatBubble from './components/ChatBubble';
 import ChatPanel from './components/ChatPanel';
 
@@ -38,7 +39,14 @@ export default function App() {
               </ProtectedRoute>
             }
           />
-          <Route path="/admin" element={<MerchantConsole />} />
+          <Route
+            path="/admin"
+            element={
+              <MerchantRoute>
+                <MerchantConsole />
+              </MerchantRoute>
+            }
+          />
         </Routes>
 
         {/* Floating Chat Assistant Overlay */}
