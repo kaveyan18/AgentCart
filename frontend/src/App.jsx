@@ -6,6 +6,7 @@ import Home from './pages/Home';
 import ProductDetail from './pages/ProductDetail';
 import OrderConfirmed from './pages/OrderConfirmed';
 import OrderHistory from './pages/OrderHistory';
+import Profile from './pages/Profile';
 import MerchantConsole from './pages/MerchantConsole';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
@@ -36,6 +37,14 @@ export default function App() {
             element={
               <ProtectedRoute>
                 <OrderHistory />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute>
+                <Profile />
               </ProtectedRoute>
             }
           />

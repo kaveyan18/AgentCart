@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
-import { Sparkles, ShoppingBag, User, Search, ShieldCheck, LogOut, ChevronDown, LogIn, UserPlus } from 'lucide-react';
+import { Sparkles, ShoppingBag, User, ShieldCheck, LogOut, ChevronDown, LogIn, UserPlus } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 export default function Nav() {
@@ -116,6 +116,14 @@ export default function Nav() {
                     <div style={styles.dropdownEmail}>{user?.email}</div>
                   </div>
                   <div style={styles.divider} />
+                  <Link
+                    to="/profile"
+                    onClick={() => setDropdownOpen(false)}
+                    style={styles.dropdownItem}
+                  >
+                    <User size={15} />
+                    <span>My Profile</span>
+                  </Link>
                   <Link
                     to="/orders"
                     onClick={() => setDropdownOpen(false)}
