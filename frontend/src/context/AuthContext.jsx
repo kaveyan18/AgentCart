@@ -50,6 +50,15 @@ export function AuthProvider({ children }) {
     return data.user;
   };
 
+  const updateProfile = async (profileData) => {
+    const data = await updateUserProfile(profileData);
+    if (data && data.user) {
+      setUser(data.user);
+      setStoredAuth(token, data.user);
+    }
+    return data.user;
+  };
+
   const logout = () => {
     setToken(null);
     setUser(null);
@@ -65,6 +74,7 @@ export function AuthProvider({ children }) {
         isLoading,
         login,
         register,
+        updateProfile,
         logout
       }}
     >

@@ -70,6 +70,13 @@ export async function getCurrentUser() {
   return request('/auth/me');
 }
 
+export async function updateUserProfile(profileData) {
+  return request('/auth/profile', {
+    method: 'PUT',
+    body: JSON.stringify(profileData)
+  });
+}
+
 // ── 2. Products (Public & Merchant Management) ────────────────────────────────
 export async function getProducts() {
   return request('/products');

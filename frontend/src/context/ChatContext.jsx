@@ -245,6 +245,8 @@ export function ChatProvider({ children }) {
     setPrefilledInput,
     toggleChat,
     openChatWithPrompt,
+    setIsOpen,
+    closeChat: () => setIsOpen(false),
     sendMessage,
     processCheckout,
     setOrderId,

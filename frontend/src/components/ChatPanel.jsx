@@ -107,6 +107,7 @@ export default function ChatPanel() {
     prefilledInput,
     setPrefilledInput,
     toggleChat,
+    closeChat,
     sendMessage,
     processCheckout,
     resetChat
@@ -186,8 +187,12 @@ export default function ChatPanel() {
           </button>
           <button
             style={styles.actionBtn}
-            onClick={() => setIsOpen(false)}
+            onClick={() => {
+              if (typeof closeChat === 'function') closeChat();
+              else if (typeof toggleChat === 'function') toggleChat();
+            }}
             aria-label="Close chat"
+            title="Close chat"
           >
             <X size={18} />
           </button>

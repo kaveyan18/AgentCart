@@ -3,7 +3,8 @@ import { Link } from 'react-router-dom';
 import {
   User, Mail, ShieldCheck, ShoppingBag, Calendar,
   CheckCircle2, XCircle, Clock, Sparkles, Package,
-  TrendingUp, CreditCard, Star, ChevronRight
+  TrendingUp, CreditCard, Star, ChevronRight,
+  MapPin, Phone, Edit3, Save
 } from 'lucide-react';
 import Nav from '../components/Nav';
 import { useAuth } from '../context/AuthContext';
@@ -11,9 +12,55 @@ import { getOrderHistory } from '../api/client';
 import { formatPrice, formatDate } from '../utils/helpers';
 
 export default function Profile() {
-  const { user } = useAuth();
+  const { user, updateProfile } = useAuth();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  // Address & Contact Management State
+  const [isEditingAddress, setIsEditingAddress] = useState(false);
+  const [addressSaved, setAddressSaved] = useState(false);
+  const [addressForm, setAddressForm] = useState({
+    phone: user?.phone || '+91 98765 43210',
+    street: user?.shippingAddress?.street || '123 Tech Residency, 4th Cross Road',
+    city: user?.shippingAddress?.city || 'Bengaluru',
+    state: user?.shippingAddress?.state || 'Karnataka',
+    postalCode: user?.shippingAddress?.postalCode || '560034',
+    country: user?.shippingAddress?.country || 'India'
+  });
+
+  useEffect(() => {
+    if (user) {
+      setAddressForm({
+        phone: user.phone || '+91 98765 43210',
+        street: user.shippingAddress?.street || '123 Tech Residency, 4th Cross Road',
+        city: user.shippingAddress?.city || 'Bengaluru',
+        state: user.shippingAddress?.state || 'Karnataka',
+        postalCode: user.shippingAddress?.postalCode || '560034',
+        country: user.shippingAddress?.country || 'India'
+      });
+    }
+  }, [user]);
+
+  const handleSaveAddress = async (e) => {
+    e.preventDefault();
+    try {
+      await updateProfile({
+        phone: addressForm.phone,
+        shippingAddress: {
+          street: addressForm.street,
+          city: addressForm.city,
+          state: addressForm.state,
+          postalCode: addressForm.postalCode,
+          country: addressForm.country
+        }
+      });
+      setIsEditingAddress(false);
+      setAddressSaved(true);
+      setTimeout(() => setAddressSaved(false), 3000);
+    } catch (err) {
+      alert(`Could not save address: ${err.message}`);
+    }
+  };
 
   useEffect(() => {
     async function load() {
@@ -192,6 +239,112 @@ export default function Profile() {
           <InfoRow label="Email Address" value={user?.email || '—'} />
           <InfoRow label="Account Type"  value={isMerchant ? 'Merchant' : 'Customer'} />
         </div>
+      </div>
+
+      {/* ── Delivery Address & Contact Details Card ───────────── */}
+      <div style={s.section}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
+          <h2 style={{ ...s.sectionTitle, marginBottom: 0 }}>
+            <MapPin size={18} style={{ marginRight: '8px', color: 'var(--coral)' }} />
+            Default Delivery & Contact Details
+          </h2>
+          <button
+            type="button"
+            onClick={() => setIsEditingAddress(!isEditingAddress)}
+            style={s.editAddressBtn}
+          >
+            <Edit3 size={13} />
+            <span>{isEditingAddress ? 'Cancel' : 'Edit Address'}</span>
+          </button>
+        </div>
+
+        {addressSaved && (
+          <div style={s.successBanner}>
+            <CheckCircle2 size={15} color="var(--sage)" />
+            <span>Delivery details saved to profile successfully!</span>
+          </div>
+        )}
+
+        {!isEditingAddress ? (
+          <div style={s.infoCard}>
+            <InfoRow label="Contact Phone" value={user?.phone || addressForm.phone || '+91 98765 43210'} />
+            <InfoRow label="Street Address" value={user?.shippingAddress?.street || addressForm.street || '123 Tech Residency, 4th Cross Road'} />
+            <InfoRow label="City & State" value={`${user?.shippingAddress?.city || addressForm.city || 'Bengaluru'}, ${user?.shippingAddress?.state || addressForm.state || 'Karnataka'}`} />
+            <InfoRow label="PIN / Postal Code" value={user?.shippingAddress?.postalCode || addressForm.postalCode || '560034'} />
+            <InfoRow label="Country" value={user?.shippingAddress?.country || addressForm.country || 'India'} />
+          </div>
+        ) : (
+          <form onSubmit={handleSaveAddress} style={s.addressForm}>
+            <div style={s.formGrid}>
+              <div style={s.formGroup}>
+                <label style={s.label}>Contact Phone Number *</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="+91 98765 43210"
+                  value={addressForm.phone}
+                  onChange={(e) => setAddressForm({ ...addressForm, phone: e.target.value })}
+                  style={s.input}
+                />
+              </div>
+
+              <div style={s.formGroup}>
+                <label style={s.label}>PIN / Postal Code *</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="560034"
+                  value={addressForm.postalCode}
+                  onChange={(e) => setAddressForm({ ...addressForm, postalCode: e.target.value })}
+                  style={s.input}
+                />
+              </div>
+            </div>
+
+            <div style={s.formGroup}>
+              <label style={s.label}>Street Address / Flat / Building *</label>
+              <input
+                type="text"
+                required
+                placeholder="Flat 402, Green Meadows, 12th Main Road"
+                value={addressForm.street}
+                onChange={(e) => setAddressForm({ ...addressForm, street: e.target.value })}
+                style={s.input}
+              />
+            </div>
+
+            <div style={s.formGrid}>
+              <div style={s.formGroup}>
+                <label style={s.label}>City *</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="Bengaluru"
+                  value={addressForm.city}
+                  onChange={(e) => setAddressForm({ ...addressForm, city: e.target.value })}
+                  style={s.input}
+                />
+              </div>
+
+              <div style={s.formGroup}>
+                <label style={s.label}>State *</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="Karnataka"
+                  value={addressForm.state}
+                  onChange={(e) => setAddressForm({ ...addressForm, state: e.target.value })}
+                  style={s.input}
+                />
+              </div>
+            </div>
+
+            <button type="submit" style={s.saveAddressBtn}>
+              <Save size={15} />
+              <span>Save Delivery Details</span>
+            </button>
+          </form>
+        )}
       </div>
 
       {/* ── AI Tip Box ────────────────────────────────────── */}
@@ -475,6 +628,79 @@ const s = {
     fontSize: '13.5px',
     fontWeight: '600',
     color: 'var(--ink)',
+  },
+
+  /* Address Management */
+  editAddressBtn: {
+    background: 'var(--cream)',
+    border: '1px solid var(--sand)',
+    borderRadius: '8px',
+    padding: '6px 12px',
+    fontSize: '12px',
+    fontWeight: '600',
+    color: 'var(--coral-dark)',
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '5px',
+  },
+  successBanner: {
+    background: '#dcfce7',
+    color: '#16a34a',
+    border: '1px solid #bbf7d0',
+    borderRadius: '10px',
+    padding: '10px 14px',
+    fontSize: '12.5px',
+    fontWeight: '600',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    marginBottom: '14px',
+  },
+  addressForm: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '12px',
+  },
+  formGrid: {
+    display: 'grid',
+    gridTemplateColumns: '1fr 1fr',
+    gap: '12px',
+  },
+  formGroup: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '6px',
+  },
+  label: {
+    fontSize: '12px',
+    fontWeight: '600',
+    color: 'var(--slate)',
+  },
+  input: {
+    padding: '10px 14px',
+    borderRadius: '10px',
+    border: '1px solid var(--sand)',
+    background: 'var(--cream)',
+    fontSize: '13px',
+    color: 'var(--ink)',
+    outline: 'none',
+  },
+  saveAddressBtn: {
+    alignSelf: 'flex-start',
+    marginTop: '6px',
+    background: 'linear-gradient(135deg, var(--coral), var(--coral-dark))',
+    color: '#ffffff',
+    border: 'none',
+    padding: '10px 18px',
+    borderRadius: '10px',
+    fontSize: '13px',
+    fontWeight: '700',
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '6px',
+    boxShadow: '0 4px 12px rgba(240, 101, 74, 0.25)',
   },
 
   /* AI tip */
