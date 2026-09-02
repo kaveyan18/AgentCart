@@ -50,7 +50,7 @@ router.get('/', requireAuth, async (req, res) => {
 
 // 4. Buyer confirmed payment — re-validate through gate, create Razorpay order & associate with user
 router.post('/confirm', requireAuth, async (req, res) => {
-  const { items, discountPercent } = req.body;
+  const { items, discountPercent, fullName, phone, shippingAddress } = req.body;
 
   // Re-run the gate here too — never trust a total the frontend sends back to you
   const gateResult = reviewOrder({ items, discountPercent });
@@ -65,23 +65,39 @@ router.post('/confirm', requireAuth, async (req, res) => {
     const user = await User.findById(req.userId);
     const razorpayOrder = await createRazorpayOrder(gateResult.total, `rcpt_${Date.now().toString().slice(-8)}`);
 
+    const finalFullName = fullName?.trim() || user?.name || 'Valued Customer';
+    const finalPhone = phone?.trim() || user?.phone || '+91 98765 43210';
+    const finalAddress = (shippingAddress && shippingAddress.street) ? shippingAddress : (user?.shippingAddress?.street ? user.shippingAddress : {
+      street: '123 Tech Residency, 4th Cross Road',
+      city: 'Bengaluru',
+      state: 'Karnataka',
+      postalCode: '560034',
+      country: 'India'
+    });
+
     const order = await Order.create({
       userId: req.userId,
       userEmail: user ? user.email : undefined,
+      fullName: finalFullName,
+      phone: finalPhone,
+      shippingAddress: finalAddress,
       items,
       total: gateResult.total,
       status: 'created',
       razorpayOrderId: razorpayOrder.id
     });
 
-    await writeLog('razorpay_order_created', `Order ${order._id} created in Razorpay for ${user?.email || 'user'}`, { razorpayOrderId: razorpayOrder.id, total: gateResult.total }, req.userId);
+    await writeLog('razorpay_order_created', `Order ${order._id} created in Razorpay for ${user?.email || 'user'} (Deliver to: ${finalFullName}, ${finalAddress.city})`, { razorpayOrderId: razorpayOrder.id, total: gateResult.total }, req.userId);
 
     res.json({
       orderId: order._id,
       razorpayOrderId: razorpayOrder.id,
       amount: razorpayOrder.amount,
       currency: razorpayOrder.currency,
-      keyId: process.env.RAZORPAY_KEY_ID
+      keyId: process.env.RAZORPAY_KEY_ID,
+      fullName: finalFullName,
+      phone: finalPhone,
+      shippingAddress: finalAddress
     });
   } catch (err) {
     await writeLog('razorpay_order_failed', err.message, { error: true }, req.userId);

@@ -22,7 +22,9 @@ import {
   Tag,
   TrendingUp,
   Bot,
-  Sparkles
+  Sparkles,
+  MapPin,
+  Phone
 } from 'lucide-react';
 import { getAuditLogs, getAllOrdersForAdmin, getProducts, createProduct, updateProduct, deleteProduct } from '../api/client';
 import { formatPrice, formatTime, formatDate } from '../utils/helpers';
@@ -613,7 +615,8 @@ export default function MerchantConsole() {
               <thead>
                 <tr>
                   <th style={styles.th}>Order ID</th>
-                  <th style={styles.th}>Customer</th>
+                  <th style={styles.th}>Customer & Contact</th>
+                  <th style={styles.th}>Delivery Destination</th>
                   <th style={styles.th}>Items</th>
                   <th style={styles.th}>Total</th>
                   <th style={styles.th}>Status</th>
@@ -621,29 +624,47 @@ export default function MerchantConsole() {
                 </tr>
               </thead>
               <tbody>
-                {orders.map((o) => (
-                  <tr key={o._id} style={styles.tr}>
-                    <td style={{ ...styles.td, ...styles.mono }}>#{String(o._id).slice(-8).toUpperCase()}</td>
-                    <td style={styles.td}>
-                      <div style={{ fontWeight: '600' }}>{o.userId?.name || 'Customer'}</div>
-                      <div style={{ fontSize: '12px', color: 'var(--slate)' }}>{o.userEmail || o.userId?.email || 'N/A'}</div>
-                    </td>
-                    <td style={styles.td}>
-                      {(o.items || []).map(i => `${i.name} (×${i.qty || 1})`).join(', ')}
-                    </td>
-                    <td style={{ ...styles.td, fontWeight: '700', color: 'var(--ink)' }}>
-                      {formatPrice(o.total)}
-                    </td>
-                    <td style={styles.td}>
-                      <span className={`pill ${o.status === 'paid' ? 'paid' : o.status === 'failed' ? 'failed' : 'created'}`}>
-                        {o.status?.toUpperCase()}
-                      </span>
-                    </td>
-                    <td style={{ ...styles.td, fontSize: '12px', color: 'var(--slate)' }}>
-                      {formatDate(o.createdAt)}
-                    </td>
-                  </tr>
-                ))}
+                {orders.map((o) => {
+                  const customerName = o.fullName || o.userId?.name || 'Customer';
+                  const contactPhone = o.phone || o.userId?.phone || 'N/A';
+                  const addr = o.shippingAddress;
+                  const formattedAddress = (addr && addr.street)
+                    ? `${addr.street}, ${addr.city}, ${addr.state} - ${addr.postalCode}`
+                    : 'Standard Direct Dispatch';
+
+                  return (
+                    <tr key={o._id} style={styles.tr}>
+                      <td style={{ ...styles.td, ...styles.mono }}>#{String(o._id).slice(-8).toUpperCase()}</td>
+                      <td style={styles.td}>
+                        <div style={{ fontWeight: '600', color: 'var(--ink)' }}>{customerName}</div>
+                        <div style={{ fontSize: '11.5px', color: 'var(--slate)', display: 'flex', alignItems: 'center', gap: '4px', marginTop: '2px' }}>
+                          <Phone size={11} color="var(--sage)" /> {contactPhone}
+                        </div>
+                        <div style={{ fontSize: '11px', color: 'var(--slate)' }}>{o.userEmail || o.userId?.email || ''}</div>
+                      </td>
+                      <td style={styles.td}>
+                        <div style={{ fontSize: '12px', color: 'var(--ink)', display: 'flex', alignItems: 'flex-start', gap: '5px', maxWidth: '240px' }}>
+                          <MapPin size={13} color="var(--coral)" style={{ flexShrink: 0, marginTop: '2px' }} />
+                          <span>{formattedAddress}</span>
+                        </div>
+                      </td>
+                      <td style={styles.td}>
+                        {(o.items || []).map(i => `${i.name} (×${i.qty || 1})`).join(', ')}
+                      </td>
+                      <td style={{ ...styles.td, fontWeight: '700', color: 'var(--ink)' }}>
+                        {formatPrice(o.total)}
+                      </td>
+                      <td style={styles.td}>
+                        <span className={`pill ${o.status === 'paid' ? 'paid' : o.status === 'failed' ? 'failed' : 'created'}`}>
+                          {o.status?.toUpperCase()}
+                        </span>
+                      </td>
+                      <td style={{ ...styles.td, fontSize: '12px', color: 'var(--slate)' }}>
+                        {formatDate(o.createdAt)}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           )}

@@ -35,7 +35,14 @@ router.post('/register', async (req, res) => {
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '7d' });
     res.status(201).json({
       token,
-      user: { id: user._id, name: user.name, email: user.email, role: user.role }
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        phone: user.phone || '',
+        shippingAddress: user.shippingAddress || {}
+      }
     });
   } catch (err) {
     res.status(500).json({ message: 'Registration failed', detail: err.message });
@@ -58,7 +65,14 @@ router.post('/login', async (req, res) => {
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '7d' });
     res.json({
       token,
-      user: { id: user._id, name: user.name, email: user.email, role: user.role }
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        phone: user.phone || '',
+        shippingAddress: user.shippingAddress || {}
+      }
     });
   } catch (err) {
     res.status(500).json({ message: 'Login failed', detail: err.message });
@@ -72,9 +86,43 @@ router.get('/me', requireAuth, async (req, res) => {
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
-    res.json({ user: { id: user._id, name: user.name, email: user.email, role: user.role } });
+    res.json({
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        phone: user.phone || '',
+        shippingAddress: user.shippingAddress || {}
+      }
+    });
   } catch (err) {
     res.status(500).json({ message: 'Could not fetch user profile', detail: err.message });
+  }
+});
+
+// PUT /api/auth/profile (update phone and shipping address)
+router.put('/profile', requireAuth, async (req, res) => {
+  try {
+    const { name, phone, shippingAddress } = req.body;
+    const updateData = {};
+    if (name) updateData.name = name.trim();
+    if (phone !== undefined) updateData.phone = phone.trim();
+    if (shippingAddress) updateData.shippingAddress = shippingAddress;
+
+    const user = await User.findByIdAndUpdate(req.userId, updateData, { new: true }).select('-passwordHash');
+    res.json({
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        phone: user.phone || '',
+        shippingAddress: user.shippingAddress || {}
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ message: 'Could not update profile', detail: err.message });
   }
 });
 

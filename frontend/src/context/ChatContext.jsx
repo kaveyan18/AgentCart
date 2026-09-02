@@ -101,7 +101,7 @@ export function ChatProvider({ children }) {
   }, [history, isOpen]);
 
   // Razorpay Checkout Trigger
-  const processCheckout = useCallback(async (items, navigate) => {
+  const processCheckout = useCallback(async (items, navigate, deliveryInfo = {}) => {
     if (!items || items.length === 0) return;
 
     const token = getStoredToken();
@@ -130,7 +130,7 @@ export function ChatProvider({ children }) {
     setMessages(prev => [...prev, buyerNote]);
 
     try {
-      const orderData = await createOrder(items);
+      const orderData = await createOrder(items, 0, deliveryInfo);
       setOrderId(orderData.orderId);
 
       const options = {
@@ -142,9 +142,9 @@ export function ChatProvider({ children }) {
         description: items.map(i => i.name).join(', '),
         theme: { color: '#F0654A' },
         prefill: {
-          name: currentUser?.name || 'Customer',
+          name: deliveryInfo.fullName || currentUser?.name || 'Customer',
           email: currentUser?.email || 'customer@example.com',
-          contact: '9999999999'
+          contact: deliveryInfo.phone || currentUser?.phone || '9999999999'
         },
         handler: async function (response) {
           try {

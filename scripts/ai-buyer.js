@@ -78,7 +78,18 @@ async function runAutonomousBuyer() {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${token}`
     },
-    body: JSON.stringify({ items: bundleItems })
+    body: JSON.stringify({
+      items: bundleItems,
+      fullName: 'Alex Rivera (Autonomous Buyer Agent)',
+      phone: '+91 98765 43210',
+      shippingAddress: {
+        street: 'AI Robotic Fulfillment Hub, Tower B, Sector 62',
+        city: 'Bengaluru',
+        state: 'Karnataka',
+        postalCode: '560100',
+        country: 'India'
+      }
+    })
   });
 
   const orderData = await orderRes.json();

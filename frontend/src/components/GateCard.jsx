@@ -1,9 +1,37 @@
-import React from 'react';
-import { ShieldCheck, Lock, Check } from 'lucide-react';
+import React, { useState } from 'react';
+import { ShieldCheck, Lock, Check, MapPin, Phone, User, Edit3, ChevronDown, ChevronUp } from 'lucide-react';
 import { formatPrice } from '../utils/helpers';
+import { useAuth } from '../context/AuthContext';
 
 export default function GateCard({ items = [], total, onConfirm, isProcessing }) {
+  const { user } = useAuth();
   const displayTotal = total || items.reduce((s, i) => s + (i.price * (i.qty || 1)), 0);
+
+  // Delivery & Contact State
+  const [isEditingDelivery, setIsEditingDelivery] = useState(false);
+  const [delivery, setDelivery] = useState({
+    fullName: user?.name || 'Alex Rivera',
+    phone: user?.phone || '+91 98765 43210',
+    street: user?.shippingAddress?.street || '123 Tech Residency, 4th Cross Road',
+    city: user?.shippingAddress?.city || 'Bengaluru',
+    state: user?.shippingAddress?.state || 'Karnataka',
+    postalCode: user?.shippingAddress?.postalCode || '560034',
+    country: 'India'
+  });
+
+  const handleConfirmClick = () => {
+    onConfirm({
+      fullName: delivery.fullName,
+      phone: delivery.phone,
+      shippingAddress: {
+        street: delivery.street,
+        city: delivery.city,
+        state: delivery.state,
+        postalCode: delivery.postalCode,
+        country: delivery.country
+      }
+    });
+  };
 
   return (
     <div style={styles.card}>
@@ -14,6 +42,7 @@ export default function GateCard({ items = [], total, onConfirm, isProcessing })
         </div>
       </div>
 
+      {/* Items Summary */}
       <div style={styles.itemsList}>
         {items.map((it, idx) => (
           <div key={idx} style={styles.row}>
@@ -31,9 +60,85 @@ export default function GateCard({ items = [], total, onConfirm, isProcessing })
         <span style={styles.totalAmount}>{formatPrice(displayTotal)}</span>
       </div>
 
+      {/* ── Shipping & Contact Information Section ──────────────────────────── */}
+      <div style={styles.deliveryBox}>
+        <div style={styles.deliveryHeader}>
+          <div style={styles.deliveryTitle}>
+            <MapPin size={13} color="var(--coral)" />
+            <span>Shipping & Contact</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setIsEditingDelivery(!isEditingDelivery)}
+            style={styles.editDeliveryBtn}
+          >
+            <Edit3 size={11} />
+            <span>{isEditingDelivery ? 'Done' : 'Edit'}</span>
+          </button>
+        </div>
+
+        {!isEditingDelivery ? (
+          <div style={styles.deliveryPreview}>
+            <div style={styles.deliveryLine}>
+              <User size={12} color="var(--slate)" />
+              <strong style={{ color: 'var(--ink)' }}>{delivery.fullName}</strong>
+              <span style={{ color: 'var(--slate)', margin: '0 4px' }}>•</span>
+              <Phone size={12} color="var(--slate)" />
+              <span>{delivery.phone}</span>
+            </div>
+            <div style={styles.addressLine}>
+              {delivery.street}, {delivery.city}, {delivery.state} - {delivery.postalCode}
+            </div>
+          </div>
+        ) : (
+          <div style={styles.deliveryForm}>
+            <div style={styles.formRow}>
+              <input
+                type="text"
+                placeholder="Full Name"
+                value={delivery.fullName}
+                onChange={(e) => setDelivery({ ...delivery, fullName: e.target.value })}
+                style={styles.input}
+              />
+              <input
+                type="text"
+                placeholder="Phone (+91...)"
+                value={delivery.phone}
+                onChange={(e) => setDelivery({ ...delivery, phone: e.target.value })}
+                style={styles.input}
+              />
+            </div>
+            <input
+              type="text"
+              placeholder="Street Address / Flat No."
+              value={delivery.street}
+              onChange={(e) => setDelivery({ ...delivery, street: e.target.value })}
+              style={styles.input}
+            />
+            <div style={styles.formRow}>
+              <input
+                type="text"
+                placeholder="City"
+                value={delivery.city}
+                onChange={(e) => setDelivery({ ...delivery, city: e.target.value })}
+                style={styles.input}
+              />
+              <input
+                type="text"
+                placeholder="PIN Code"
+                value={delivery.postalCode}
+                onChange={(e) => setDelivery({ ...delivery, postalCode: e.target.value })}
+                style={styles.input}
+              />
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Checkout Button */}
       <button
         style={styles.confirmBtn}
-        onClick={onConfirm}
+        onClick={handleConfirmClick}
         disabled={isProcessing}
       >
         <Lock size={14} color="#fff" />
@@ -41,7 +146,7 @@ export default function GateCard({ items = [], total, onConfirm, isProcessing })
       </button>
 
       <div style={styles.securityNote}>
-        Direct HMAC-SHA256 signature verification enabled
+        Direct HMAC-SHA256 signature verification & policy safety enabled
       </div>
     </div>
   );
@@ -50,7 +155,7 @@ export default function GateCard({ items = [], total, onConfirm, isProcessing })
 const styles = {
   card: {
     alignSelf: 'flex-start',
-    maxWidth: '94%',
+    maxWidth: '96%',
     background: 'var(--white)',
     borderRadius: '18px',
     padding: '16px',
@@ -104,15 +209,91 @@ const styles = {
     fontWeight: '700',
     paddingTop: '10px',
     borderTop: '1px solid var(--border)',
-    color: 'var(--ink)'
+    color: 'var(--ink)',
+    marginBottom: '12px'
   },
   totalAmount: {
     fontFamily: 'var(--font-brand)',
     fontSize: '18px',
     color: 'var(--coral-dark)'
   },
+  deliveryBox: {
+    background: 'var(--cream)',
+    borderRadius: '12px',
+    padding: '10px 12px',
+    border: '1px solid var(--sand)',
+    marginBottom: '12px'
+  },
+  deliveryHeader: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: '6px'
+  },
+  deliveryTitle: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '5px',
+    fontSize: '11.5px',
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: '0.03em',
+    color: 'var(--slate)'
+  },
+  editDeliveryBtn: {
+    background: 'transparent',
+    border: 'none',
+    color: 'var(--coral-dark)',
+    fontSize: '11.5px',
+    fontWeight: '600',
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '3px',
+    padding: '2px 4px'
+  },
+  deliveryPreview: {
+    fontSize: '12px',
+    color: 'var(--ink)',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '2px'
+  },
+  deliveryLine: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '4px',
+    fontSize: '12px'
+  },
+  addressLine: {
+    fontSize: '11.5px',
+    color: 'var(--slate)',
+    lineHeight: '1.4'
+  },
+  deliveryForm: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '6px',
+    marginTop: '6px'
+  },
+  formRow: {
+    display: 'grid',
+    gridTemplateColumns: '1fr 1fr',
+    gap: '6px'
+  },
+  input: {
+    width: '100%',
+    padding: '6px 8px',
+    borderRadius: '6px',
+    border: '1px solid var(--sand)',
+    fontSize: '11.5px',
+    background: 'var(--white)',
+    color: 'var(--ink)',
+    outline: 'none',
+    boxSizing: 'border-box'
+  },
   confirmBtn: {
-    marginTop: '14px',
+    marginTop: '4px',
     width: '100%',
     background: 'linear-gradient(135deg, var(--coral) 0%, var(--coral-dark) 100%)',
     color: '#ffffff',

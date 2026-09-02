@@ -151,10 +151,10 @@ export default function ChatPanel() {
     sendMessage(text);
   };
 
-  const handleCheckoutClick = async (items) => {
+  const handleCheckoutClick = async (items, deliveryInfo) => {
     setIsProcessingCheckout(true);
     try {
-      await processCheckout(items, navigate);
+      await processCheckout(items, navigate, deliveryInfo);
     } finally {
       setIsProcessingCheckout(false);
     }
@@ -180,13 +180,13 @@ export default function ChatPanel() {
             style={styles.actionBtn}
             onClick={resetChat}
             title="Start new conversation"
-            aria-label="New conversation"
+            aria-label="New chat"
           >
             <RotateCcw size={15} />
           </button>
           <button
-            style={styles.closeBtn}
-            onClick={toggleChat}
+            style={styles.actionBtn}
+            onClick={() => setIsOpen(false)}
             aria-label="Close chat"
           >
             <X size={18} />
@@ -223,7 +223,7 @@ export default function ChatPanel() {
               <GateCard
                 items={m.items}
                 total={m.total}
-                onConfirm={() => handleCheckoutClick(m.items)}
+                onConfirm={(deliveryInfo) => handleCheckoutClick(m.items, deliveryInfo)}
                 isProcessing={isProcessingCheckout}
               />
             )}

@@ -6,6 +6,14 @@ const userSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true, lowercase: true, trim: true },
   passwordHash: { type: String, required: true },
   role: { type: String, enum: ['buyer', 'merchant'], default: 'buyer' },
+  phone: { type: String, default: '' },
+  shippingAddress: {
+    street: { type: String, default: '' },
+    city: { type: String, default: '' },
+    state: { type: String, default: '' },
+    postalCode: { type: String, default: '' },
+    country: { type: String, default: 'India' }
+  },
   createdAt: { type: Date, default: Date.now }
 });
 

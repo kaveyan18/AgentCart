@@ -108,10 +108,16 @@ export async function sendChatMessage(message, history = []) {
 }
 
 // ── 4. Razorpay Orders & Verification ─────────────────────────────────────────
-export async function createOrder(items, discountPercent = 0) {
+export async function createOrder(items, discountPercent = 0, deliveryInfo = {}) {
   return request('/orders/confirm', {
     method: 'POST',
-    body: JSON.stringify({ items, discountPercent })
+    body: JSON.stringify({
+      items,
+      discountPercent,
+      fullName: deliveryInfo.fullName,
+      phone: deliveryInfo.phone,
+      shippingAddress: deliveryInfo.shippingAddress
+    })
   });
 }
 
