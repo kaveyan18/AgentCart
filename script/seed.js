@@ -1,7 +1,8 @@
 /**
  * seed.js — run with: node script/seed.js
- * Populates the `products` collection in MongoDB with a rich electronics catalog.
+ * Populates the `products` collection in MongoDB with a diverse multi-brand electronics catalog.
  * Categories: Laptops, Smartphones, Tablets, Audio, Wearables, Gaming, Cameras, Workspace, Smart Home, Power & Charging.
+ * Brands: Apple, Dell, ASUS, Lenovo, Samsung, Google, Sony, Bose, Sennheiser, Marshall, Microsoft Xbox, Razer, Keychron, Logitech, DJI, GoPro, Philips Hue, Nanoleaf, Anker.
  */
 
 require("dotenv").config();
@@ -29,7 +30,23 @@ const products = [
     price: 114900,
     category: "laptops",
     description: "Liquid Retina display, 8-core CPU, 10-core GPU, 18-hour battery life, 256GB SSD in Midnight.",
-    relatedTo: ["prod_usbc_hub_7in1", "prod_laptopstand_aluminium"],
+    relatedTo: ["prod_usbc_hub_7in1", "prod_laptopstand_aluminium", "prod_charger_65w_gan"],
+  },
+  {
+    _id: "prod_dell_xps_15",
+    name: "Dell XPS 15 OLED (Intel Core i7, 16GB RAM, 512GB SSD)",
+    price: 98900,
+    category: "laptops",
+    description: "3.5K OLED InfinityEdge touch display, Intel Core i7-13700H, CNC machined aluminum and carbon fiber chassis.",
+    relatedTo: ["prod_usbc_hub_7in1", "prod_laptopstand_aluminium", "prod_mx_master_3s"],
+  },
+  {
+    _id: "prod_asus_rog_zephyrus",
+    name: "ASUS ROG Zephyrus G14 Gaming Laptop (Ryzen 9, RTX 4060)",
+    price: 94990,
+    category: "laptops",
+    description: "14-inch 165Hz ROG Nebula Display, AMD Ryzen 9 7940HS, NVIDIA GeForce RTX 4060 8GB GDDR6.",
+    relatedTo: ["prod_razer_blackshark_v2_pro", "prod_xbox_wireless_controller"],
   },
 
   // ── 2. Smartphones & Mobile ─────────────────────────────────────────────────
@@ -40,6 +57,22 @@ const products = [
     category: "smartphones",
     description: "Aerospace-grade titanium design, A17 Pro chip, Action button, 48MP main camera system with 3x Telephoto.",
     relatedTo: ["prod_phonecase_iphone15", "prod_screenprotector_iphone15", "prod_charger_65w_gan"],
+  },
+  {
+    _id: "prod_samsung_galaxy_s24_ultra",
+    name: "Samsung Galaxy S24 Ultra 5G (256GB, Titanium Gray, S-Pen)",
+    price: 99999,
+    category: "smartphones",
+    description: "Galaxy AI powered, 200MP Quad Telephoto camera, Snapdragon 8 Gen 3 for Galaxy, embedded S-Pen stylus.",
+    relatedTo: ["prod_phonecase_s24_ultra", "prod_screenprotector_s24", "prod_anker_prime_100w_gan"],
+  },
+  {
+    _id: "prod_google_pixel_8_pro",
+    name: "Google Pixel 8 Pro (128GB, Obsidian, Tensor G3)",
+    price: 79999,
+    category: "smartphones",
+    description: "Google Tensor G3, immersive 6.7-inch Super Actua display, Pro triple camera with Best Take and Magic Editor.",
+    relatedTo: ["prod_charger_65w_gan", "prod_cable_usbc_240w"],
   },
   {
     _id: "prod_phonecase_iphone15",
@@ -57,6 +90,22 @@ const products = [
     description: "9H diamond-grade hardness, oleophobic anti-fingerprint coating, bubble-free alignment frame.",
     relatedTo: ["prod_phonecase_iphone15"],
   },
+  {
+    _id: "prod_phonecase_s24_ultra",
+    name: "Galaxy S24 Ultra Kevlar Magnetic Armor Case",
+    price: 899,
+    category: "accessories",
+    description: "Real aramid fiber construction with integrated magnetic ring and raised camera bezel protection.",
+    relatedTo: ["prod_screenprotector_s24", "prod_samsung_galaxy_s24_ultra"],
+  },
+  {
+    _id: "prod_screenprotector_s24",
+    name: "Galaxy S24 Ultra Curved UV Tempered Glass (2-Pack)",
+    price: 349,
+    category: "accessories",
+    description: "Edge-to-edge optical clear adhesive glass compatible with sonic fingerprint unlock.",
+    relatedTo: ["prod_phonecase_s24_ultra", "prod_samsung_galaxy_s24_ultra"],
+  },
 
   // ── 3. Tablets & Creativity ─────────────────────────────────────────────────
   {
@@ -65,7 +114,23 @@ const products = [
     price: 59900,
     category: "tablets",
     description: "Stunning Liquid Retina display, blazing fast M2 chip, Landscape 12MP front camera, Wi-Fi 6E.",
-    relatedTo: ["prod_usbc_hub_7in1", "prod_charger_65w_gan"],
+    relatedTo: ["prod_apple_pencil_pro", "prod_usbc_hub_7in1", "prod_charger_65w_gan"],
+  },
+  {
+    _id: "prod_samsung_galaxy_tab_s9",
+    name: "Samsung Galaxy Tab S9 Ultra (14.6-inch Dynamic AMOLED 2X)",
+    price: 84999,
+    category: "tablets",
+    description: "Massive 14.6-inch 120Hz display, IP68 water & dust resistance, Snapdragon 8 Gen 2, included S-Pen.",
+    relatedTo: ["prod_usbc_hub_7in1", "prod_anker_prime_100w_gan"],
+  },
+  {
+    _id: "prod_apple_pencil_pro",
+    name: "Apple Pencil Pro with Haptic Feedback & Barrel Roll",
+    price: 11900,
+    category: "tablets",
+    description: "Squeeze gesture sensor, built-in gyroscope for barrel roll, haptic engine, and Apple Find My support.",
+    relatedTo: ["prod_ipad_air_m2"],
   },
 
   // ── 4. Audio & Headphones ───────────────────────────────────────────────────
@@ -78,12 +143,12 @@ const products = [
     relatedTo: ["prod_headphonecase_wh1000xm5", "prod_cable_usbc_240w"],
   },
   {
-    _id: "prod_headphonecase_wh1000xm5",
-    name: "Sony WH-1000XM5 Hard EVA Travel Case",
-    price: 1499,
+    _id: "prod_bose_quietcomfort_ultra",
+    name: "Bose QuietComfort Ultra Wireless ANC Headphones",
+    price: 35900,
     category: "audio",
-    description: "Custom molded hard shell case with accessory storage pouch and metal carabiner.",
-    relatedTo: ["prod_headphones_wh1000xm5"],
+    description: "CustomTune audio technology, revolutionary spatialized Bose Immersive Audio, world-class active noise cancellation.",
+    relatedTo: ["prod_anker_prime_100w_gan", "prod_cable_usbc_240w"],
   },
   {
     _id: "prod_airpods_pro_2",
@@ -92,6 +157,14 @@ const products = [
     category: "audio",
     description: "H2 chip, 2x more Active Noise Cancellation, Adaptive Audio, Conversation Awareness, IP54 rated.",
     relatedTo: ["prod_charger_65w_gan", "prod_apple_watch_ultra2"],
+  },
+  {
+    _id: "prod_headphonecase_wh1000xm5",
+    name: "Sony WH-1000XM5 Hard EVA Travel Case",
+    price: 1499,
+    category: "audio",
+    description: "Custom molded hard shell case with accessory storage pouch and metal carabiner.",
+    relatedTo: ["prod_headphones_wh1000xm5"],
   },
 
   // ── 5. Wearables & Smartwatches ─────────────────────────────────────────────
@@ -103,6 +176,14 @@ const products = [
     description: "Rugged 49mm titanium case, 3000 nits display, precision dual-frequency GPS, 36-hr battery life.",
     relatedTo: ["prod_airpods_pro_2", "prod_charger_65w_gan"],
   },
+  {
+    _id: "prod_samsung_galaxy_watch_ultra",
+    name: "Samsung Galaxy Watch Ultra (47mm Titanium LTE, Sapphire)",
+    price: 59999,
+    category: "wearables",
+    description: "10ATM water resistance, dual-frequency GPS, BioActive Sensor, multi-day outdoor endurance battery in Titanium Silver.",
+    relatedTo: ["prod_samsung_galaxy_s24_ultra", "prod_anker_prime_100w_gan"],
+  },
 
   // ── 6. Gaming & Consoles ────────────────────────────────────────────────────
   {
@@ -112,6 +193,22 @@ const products = [
     category: "gaming",
     description: "Immersive haptic feedback, dynamic adaptive triggers, built-in microphone and motion sensor.",
     relatedTo: ["prod_cable_usbc_240w", "prod_powerbank_20000"],
+  },
+  {
+    _id: "prod_xbox_wireless_controller",
+    name: "Microsoft Xbox Wireless Controller (Carbon Black)",
+    price: 4790,
+    category: "gaming",
+    description: "Sculpted surfaces, hybrid D-pad, textured grip on triggers and bumpers, seamless Bluetooth connectivity.",
+    relatedTo: ["prod_cable_usbc_240w", "prod_asus_rog_zephyrus"],
+  },
+  {
+    _id: "prod_razer_blackshark_v2_pro",
+    name: "Razer BlackShark V2 Pro Wireless Esports Gaming Headset",
+    price: 12999,
+    category: "gaming",
+    description: "TriForce Titanium 50mm Drivers, HyperClear Super Wideband Mic, ultra-soft breathable memory foam cushions.",
+    relatedTo: ["prod_asus_rog_zephyrus", "prod_xbox_wireless_controller"],
   },
 
   // ── 7. Workspace & Ergonomics ───────────────────────────────────────────────
@@ -137,7 +234,7 @@ const products = [
     price: 1999,
     category: "workspace",
     description: "Height and angle adjustable heavy-duty aluminium stand with heat dissipation vents.",
-    relatedTo: ["prod_mx_master_3s", "prod_macbook_air_m3"],
+    relatedTo: ["prod_mx_master_3s", "prod_macbook_air_m3", "prod_dell_xps_15"],
   },
   {
     _id: "prod_usbc_hub_7in1",
@@ -145,7 +242,7 @@ const products = [
     price: 2499,
     category: "workspace",
     description: "4K@60Hz HDMI, 100W Power Delivery, SD/microSD reader, 2x USB 3.2 Gen 2 ports in space grey.",
-    relatedTo: ["prod_macbook_air_m3", "prod_cable_usbc_240w"],
+    relatedTo: ["prod_macbook_air_m3", "prod_dell_xps_15", "prod_cable_usbc_240w"],
   },
   {
     _id: "prod_keyboard_mouse_combo",
@@ -164,6 +261,14 @@ const products = [
     category: "cameras",
     description: "24.2MP APS-C sensor, 4K HDR recording, Real-time Eye AF, directional 3-capsule mic with windscreen.",
     relatedTo: ["prod_usbc_hub_7in1", "prod_powerbank_20000"],
+  },
+  {
+    _id: "prod_dji_osmo_pocket_3",
+    name: "DJI Osmo Pocket 3 Handheld Gimbal Camera (4K/120fps)",
+    price: 44990,
+    category: "cameras",
+    description: "1-inch CMOS sensor, 4K/120fps UHD recording, 3-axis mechanical stabilization, 2-inch rotatable OLED screen.",
+    relatedTo: ["prod_powerbank_20000", "prod_cable_usbc_240w"],
   },
 
   // ── 9. Smart Home & Ambient Lighting ─────────────────────────────────────────
@@ -186,12 +291,20 @@ const products = [
     relatedTo: ["prod_cable_usbc_240w", "prod_powerbank_20000"],
   },
   {
+    _id: "prod_anker_prime_100w_gan",
+    name: "Anker Prime 100W GaN 3-Port Ultra-Fast Charger",
+    price: 4999,
+    category: "charging",
+    description: "ActiveShield 2.0 temperature monitoring, dual USB-C plus USB-A, ultra-compact high efficiency gallium nitride.",
+    relatedTo: ["prod_cable_usbc_240w", "prod_powerbank_20000"],
+  },
+  {
     _id: "prod_cable_usbc_240w",
     name: "240W Braided USB-C to USB-C Fast Charging Cable (2m)",
     price: 799,
     category: "charging",
     description: "E-Marker smart chip, 480Mbps data sync, heavy-duty nylon braided exterior with strain relief.",
-    relatedTo: ["prod_charger_65w_gan", "prod_powerbank_20000"],
+    relatedTo: ["prod_charger_65w_gan", "prod_anker_prime_100w_gan", "prod_powerbank_20000"],
   },
   {
     _id: "prod_powerbank_20000",
@@ -199,7 +312,7 @@ const products = [
     price: 3499,
     category: "charging",
     description: "High-capacity power bank capable of charging laptops, phones, and wearables with real-time wattage screen.",
-    relatedTo: ["prod_cable_usbc_240w", "prod_charger_65w_gan"],
+    relatedTo: ["prod_cable_usbc_240w", "prod_charger_65w_gan", "prod_anker_prime_100w_gan"],
   }
 ];
 
@@ -231,7 +344,15 @@ async function seed() {
       name: 'Store Owner',
       email: 'merchant@parcel.test',
       passwordHash: merchantHash,
-      role: 'merchant'
+      role: 'merchant',
+      phone: '+91 98765 00001',
+      shippingAddress: {
+        street: 'HQ Fulfillment Hub, Sector 5',
+        city: 'Bengaluru',
+        state: 'Karnataka',
+        postalCode: '560001',
+        country: 'India'
+      }
     });
     console.log(`\n👑  Seeded Merchant Account: ${merchantUser.email} (password: demo1234, role: ${merchantUser.role})`);
 
@@ -240,7 +361,15 @@ async function seed() {
       name: 'Alex Rivera',
       email: 'buyer@parcel.test',
       passwordHash: buyerHash,
-      role: 'buyer'
+      role: 'buyer',
+      phone: '+91 98765 43210',
+      shippingAddress: {
+        street: '123 Tech Residency, 4th Cross Road',
+        city: 'Bengaluru',
+        state: 'Karnataka',
+        postalCode: '560034',
+        country: 'India'
+      }
     });
     console.log(`👤  Seeded Buyer Account:    ${buyerUser.email} (password: demo1234, role: ${buyerUser.role})`);
 
