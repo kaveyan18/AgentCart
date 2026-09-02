@@ -1,4 +1,4 @@
-const MAX_ORDER_VALUE = 5000;   // ₹
+const MAX_ORDER_VALUE = 100000;  // ₹ 1 Lakh limit
 const MAX_DISCOUNT_PERCENT = 10;
 
 function reviewOrder({ items, discountPercent = 0 }) {

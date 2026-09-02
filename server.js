@@ -27,8 +27,10 @@ app.use('/api/webhook', webhookRoutes);
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// 4. API Routes
+// 4. API Routes & Machine-readable Agent Manifest
 app.use('/api/auth', authRoutes);
+app.get('/api/catalog.json', (req, res, next) => { req.url = '/catalog.json'; productRoutes(req, res, next); });
+app.get('/catalog.json', (req, res, next) => { req.url = '/catalog.json'; productRoutes(req, res, next); });
 app.use('/api/products', productRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/chat', chatRoutes);

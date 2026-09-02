@@ -4,6 +4,47 @@ const Product = require('../models/Product');
 const requireMerchant = require('../middleware/requireMerchant');
 const { writeLog } = require('../services/auditService');
 
+// GET /api/products/catalog.json (also mounted at /api/catalog.json) — Machine-readable ACP Manifest for AI Buyers
+router.get('/catalog.json', async (req, res) => {
+  try {
+    const products = await Product.find();
+    res.json({
+      spec: "ACP/1.0",
+      standard: "Agent Commerce Protocol",
+      updated_at: new Date().toISOString(),
+      merchant: {
+        id: "merchant_agentcart_01",
+        name: "AgentCart Autonomous Electronics Store",
+        currency: "INR",
+        policy_gate: {
+          max_autonomous_order_value: 100000,
+          max_discount_percent: 10,
+          requires_signature_verification: true
+        }
+      },
+      endpoints: {
+        catalog: "/api/catalog.json",
+        propose_order: "/api/orders/confirm",
+        verify_order: "/api/orders/verify",
+        order_status: "/api/orders/:id/status"
+      },
+      items: products.map(p => ({
+        id: p._id,
+        name: p.name,
+        price: p.price,
+        currency: "INR",
+        category: p.category,
+        description: p.description,
+        in_stock: true,
+        autonomous_checkout_eligible: p.price <= 100000,
+        cross_sell_ids: p.relatedTo || []
+      }))
+    });
+  } catch (err) {
+    res.status(500).json({ error: 'Could not generate machine-readable catalog', detail: err.message });
+  }
+});
+
 // GET /api/products — list all products (public)
 router.get('/', async (req, res) => {
   try {

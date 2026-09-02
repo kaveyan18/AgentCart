@@ -10,7 +10,7 @@ export default function GateCard({ items = [], total, onConfirm, isProcessing })
       <div style={styles.header}>
         <div style={styles.gateBadge}>
           <ShieldCheck size={14} color="#3A6B45" />
-          <span>Policy Gate Approved (Max ₹5,000)</span>
+          <span>Policy Gate Approved (Max ₹1,00,000)</span>
         </div>
       </div>
 

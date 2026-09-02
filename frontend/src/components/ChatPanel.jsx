@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Bot, Send, X, Sparkles } from 'lucide-react';
+import { Bot, Send, X, Sparkles, RotateCcw } from 'lucide-react';
 import { useChat } from '../context/ChatContext';
 import GateCard from './GateCard';
 import UpsellCard from './UpsellCard';
@@ -108,7 +108,8 @@ export default function ChatPanel() {
     setPrefilledInput,
     toggleChat,
     sendMessage,
-    processCheckout
+    processCheckout,
+    resetChat
   } = useChat();
 
   const [input, setInput] = useState('');
@@ -174,13 +175,23 @@ export default function ChatPanel() {
             </div>
           </div>
         </div>
-        <button
-          style={styles.closeBtn}
-          onClick={toggleChat}
-          aria-label="Close chat"
-        >
-          <X size={18} />
-        </button>
+        <div style={styles.headActions}>
+          <button
+            style={styles.actionBtn}
+            onClick={resetChat}
+            title="Start new conversation"
+            aria-label="New conversation"
+          >
+            <RotateCcw size={15} />
+          </button>
+          <button
+            style={styles.closeBtn}
+            onClick={toggleChat}
+            aria-label="Close chat"
+          >
+            <X size={18} />
+          </button>
+        </div>
       </div>
 
       {/* Body */}
@@ -331,6 +342,24 @@ const styles = {
     borderRadius: '50%',
     background: 'var(--sage)',
     display: 'inline-block'
+  },
+  headActions: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '6px'
+  },
+  actionBtn: {
+    cursor: 'pointer',
+    background: 'rgba(255, 255, 255, 0.1)',
+    border: 'none',
+    color: '#ffffff',
+    width: '30px',
+    height: '30px',
+    borderRadius: '8px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    transition: 'background 0.15s ease'
   },
   closeBtn: {
     cursor: 'pointer',

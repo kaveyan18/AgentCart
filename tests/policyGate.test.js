@@ -6,8 +6,8 @@ test('approves an order under the limit', () => {
   expect(result.total).toBe(798);
 });
 
-test('blocks an order over the ₹5000 limit', () => {
-  const result = reviewOrder({ items: [{ price: 6000, qty: 1 }] });
+test('blocks an order over the ₹100000 limit', () => {
+  const result = reviewOrder({ items: [{ price: 120000, qty: 1 }] });
   expect(result.approved).toBe(false);
   expect(result.violations.length).toBeGreaterThan(0);
 });

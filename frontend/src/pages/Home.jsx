@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import {
   Smartphone,
   Headphones,
@@ -12,7 +12,18 @@ import {
   Watch,
   Camera,
   Layers,
-  LayoutGrid
+  LayoutGrid,
+  Gamepad2,
+  Tablet,
+  Home as HomeIcon,
+  Search,
+  X,
+  SlidersHorizontal,
+  ArrowUpDown,
+  CheckCircle2,
+  HelpCircle,
+  TrendingUp,
+  Tag
 } from 'lucide-react';
 import Nav from '../components/Nav';
 import ProductCard from '../components/ProductCard';
@@ -23,16 +34,32 @@ const CATEGORIES = [
   { id: 'all', label: 'All Electronics', icon: LayoutGrid },
   { id: 'laptops', label: 'Laptops', icon: Laptop },
   { id: 'smartphones', label: 'Smartphones', icon: Smartphone },
+  { id: 'tablets', label: 'Tablets', icon: Tablet },
   { id: 'audio', label: 'Audio & Hi-Fi', icon: Headphones },
+  { id: 'gaming', label: 'Gaming', icon: Gamepad2 },
   { id: 'wearables', label: 'Wearables', icon: Watch },
-  { id: 'cameras', label: 'Cameras & Gear', icon: Camera },
+  { id: 'cameras', label: 'Cameras', icon: Camera },
   { id: 'workspace', label: 'Workspace', icon: Layers },
+  { id: 'smarthome', label: 'Smart Home', icon: HomeIcon },
   { id: 'charging', label: 'Power & Charging', icon: Zap }
+];
+
+const QUICK_TAGS = [
+  { label: '⚡ Instant AI Checkout (≤₹1L)', action: 'instant' },
+  { label: 'Apple', query: 'Apple' },
+  { label: 'Sony', query: 'Sony' },
+  { label: 'Under ₹5,000', price: 'under5000' },
+  { label: 'Keyboards & Mice', query: 'Logitech Keychron' },
+  { label: 'GaN Chargers & Cables', query: 'Charger Cable' }
 ];
 
 export default function Home() {
   const [products, setProducts] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState('all');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [priceRange, setPriceRange] = useState('all');
+  const [sortBy, setSortBy] = useState('featured');
+  const [instantCheckoutOnly, setInstantCheckoutOnly] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const { openChatWithPrompt } = useChat();
@@ -53,9 +80,68 @@ export default function Home() {
     fetchCatalog();
   }, []);
 
-  const filteredProducts = selectedCategory === 'all'
-    ? products
-    : products.filter(p => p.category?.toLowerCase() === selectedCategory.toLowerCase());
+  // Multi-criteria filter & sort computation
+  const filteredProducts = useMemo(() => {
+    return products
+      .filter(p => {
+        // 1. Category Filter
+        if (selectedCategory !== 'all' && p.category?.toLowerCase() !== selectedCategory.toLowerCase()) {
+          return false;
+        }
+
+        // 2. Search Query Filter (name, description, category)
+        if (searchQuery.trim()) {
+          const terms = searchQuery.toLowerCase().trim().split(/\s+/).filter(Boolean);
+          const nameMatch = p.name?.toLowerCase() || '';
+          const descMatch = p.description?.toLowerCase() || '';
+          const catMatch = p.category?.toLowerCase() || '';
+          const combined = `${nameMatch} ${descMatch} ${catMatch}`;
+          const matchesAll = terms.every(t => combined.includes(t));
+          if (!matchesAll) return false;
+        }
+
+        // 3. Instant AI Checkout Filter (Policy limit ₹1,00,000)
+        if (instantCheckoutOnly && p.price > 100000) {
+          return false;
+        }
+
+        // 4. Price Range Filter
+        if (priceRange === 'under1000' && p.price >= 1000) return false;
+        if (priceRange === 'under5000' && p.price >= 5000) return false;
+        if (priceRange === '1000to100000' && (p.price < 1000 || p.price > 100000)) return false;
+        if (priceRange === 'under100000' && p.price > 100000) return false;
+        if (priceRange === 'above100000' && p.price <= 100000) return false;
+
+        return true;
+      })
+      .sort((a, b) => {
+        if (sortBy === 'price-asc') return a.price - b.price;
+        if (sortBy === 'price-desc') return b.price - a.price;
+        if (sortBy === 'name-asc') return a.name.localeCompare(b.name);
+        if (sortBy === 'name-desc') return b.name.localeCompare(a.name);
+        return 0; // Default order
+      });
+  }, [products, selectedCategory, searchQuery, priceRange, sortBy, instantCheckoutOnly]);
+
+  const hasActiveFilters = searchQuery.trim() !== '' || selectedCategory !== 'all' || priceRange !== 'all' || instantCheckoutOnly || sortBy !== 'featured';
+
+  const resetAllFilters = () => {
+    setSearchQuery('');
+    setSelectedCategory('all');
+    setPriceRange('all');
+    setSortBy('featured');
+    setInstantCheckoutOnly(false);
+  };
+
+  const handleQuickTagClick = (tag) => {
+    if (tag.action === 'instant') {
+      setInstantCheckoutOnly(prev => !prev);
+    } else if (tag.query) {
+      setSearchQuery(tag.query);
+    } else if (tag.price) {
+      setPriceRange(tag.price);
+    }
+  };
 
   return (
     <div className="page">
@@ -80,7 +166,7 @@ export default function Home() {
           <div style={styles.heroBtns}>
             <button
               className="btn btn-primary"
-              onClick={() => openChatWithPrompt('I am looking for a laptop and matching accessories')}
+              onClick={() => openChatWithPrompt('I am looking for electronics recommendations within my budget')}
             >
               <Bot size={16} color="#fff" />
               <span>Ask AI Concierge</span>
@@ -88,17 +174,17 @@ export default function Home() {
             <button
               className="btn btn-secondary"
               onClick={() => {
-                document.getElementById('catalog-section')?.scrollIntoView({ behavior: 'smooth' });
+                document.getElementById('catalog-search-section')?.scrollIntoView({ behavior: 'smooth' });
               }}
             >
-              Explore Catalog ({products.length})
+              Explore Products ({products.length})
             </button>
           </div>
 
           <div style={styles.trustBadges}>
             <div style={styles.trustItem}>
               <ShieldCheck size={16} color="var(--sage)" />
-              <span>Policy Guarded</span>
+              <span>Policy Guarded (₹1L Cap)</span>
             </div>
             <div style={styles.trustItem}>
               <Truck size={16} color="var(--coral)" />
@@ -129,11 +215,146 @@ export default function Home() {
         </div>
       </div>
 
+      {/* ── Product Search & Filter Section ───────────────────────────────────── */}
+      <div id="catalog-search-section" style={styles.searchSection}>
+        {/* Main Search Input */}
+        <div style={styles.searchBarRow}>
+          <div style={styles.searchInputWrapper}>
+            <Search size={19} color="var(--slate)" style={styles.searchIcon} />
+            <input
+              type="text"
+              style={styles.searchInput}
+              placeholder="Search products by model, brand, accessories, keywords (e.g. 'iPhone', 'Mechanical Keyboard', 'GaN Charger')..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+            {searchQuery && (
+              <button
+                type="button"
+                style={styles.clearSearchBtn}
+                onClick={() => setSearchQuery('')}
+                aria-label="Clear search"
+                title="Clear search"
+              >
+                <X size={15} />
+              </button>
+            )}
+          </div>
+
+          {/* Quick AI Search Assistant Button */}
+          <button
+            style={styles.aiSearchBtn}
+            onClick={() => openChatWithPrompt(searchQuery.trim() ? `Help me find and compare products related to "${searchQuery}"` : "Help me find the best products in the store")}
+            title="Ask AI Concierge to find specific tech"
+          >
+            <Bot size={16} color="#fff" />
+            <span>AI Search Assistant</span>
+          </button>
+        </div>
+
+        {/* Quick Search Trending Tags */}
+        <div style={styles.trendingRow}>
+          <div style={styles.trendingLabel}>
+            <TrendingUp size={13} color="var(--coral)" />
+            <span>Popular Searches:</span>
+          </div>
+          <div style={styles.trendingTags}>
+            {QUICK_TAGS.map((tag, idx) => {
+              const isActive = (tag.action === 'instant' && instantCheckoutOnly) || (tag.query && searchQuery === tag.query) || (tag.price && priceRange === tag.price);
+              return (
+                <button
+                  key={idx}
+                  style={{
+                    ...styles.trendingTag,
+                    background: isActive ? 'var(--coral)' : 'var(--cream)',
+                    color: isActive ? '#ffffff' : 'var(--ink)',
+                    borderColor: isActive ? 'var(--coral)' : 'var(--sand)'
+                  }}
+                  onClick={() => handleQuickTagClick(tag)}
+                >
+                  {tag.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Filter Controls Toolbar */}
+        <div style={styles.toolbar}>
+          <div style={styles.toolbarLeft}>
+            {/* Price Filter Dropdown */}
+            <div style={styles.filterGroup}>
+              <SlidersHorizontal size={14} color="var(--slate)" />
+              <label style={styles.filterLabel}>Price Range:</label>
+              <select
+                style={styles.select}
+                value={priceRange}
+                onChange={(e) => setPriceRange(e.target.value)}
+              >
+                <option value="all">All Prices</option>
+                <option value="under1000">Under ₹1,000 (Budget)</option>
+                <option value="under5000">Under ₹5,000</option>
+                <option value="1000to100000">₹1,000 – ₹1,00,000 (AI Checkout Eligible)</option>
+                <option value="above100000">Above ₹1,00,000 (Flagships)</option>
+              </select>
+            </div>
+
+            {/* Instant AI Checkout Policy Toggle */}
+            <button
+              type="button"
+              style={{
+                ...styles.instantToggle,
+                background: instantCheckoutOnly ? 'var(--sage-bg)' : 'var(--white)',
+                borderColor: instantCheckoutOnly ? 'var(--sage)' : 'var(--border)',
+                color: instantCheckoutOnly ? '#2c5936' : 'var(--ink)'
+              }}
+              onClick={() => setInstantCheckoutOnly(!instantCheckoutOnly)}
+              title="Filter items under ₹1,00,000 policy gate limit"
+            >
+              <ShieldCheck size={15} color={instantCheckoutOnly ? 'var(--sage)' : 'var(--slate)'} />
+              <span>Instant AI Checkout (≤₹1L)</span>
+              {instantCheckoutOnly && <CheckCircle2 size={13} color="var(--sage)" />}
+            </button>
+          </div>
+
+          <div style={styles.toolbarRight}>
+            {/* Sort Dropdown */}
+            <div style={styles.filterGroup}>
+              <ArrowUpDown size={14} color="var(--slate)" />
+              <label style={styles.filterLabel}>Sort by:</label>
+              <select
+                style={styles.select}
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+              >
+                <option value="featured">Featured / Default</option>
+                <option value="price-asc">Price: Low to High</option>
+                <option value="price-desc">Price: High to Low</option>
+                <option value="name-asc">Name: A to Z</option>
+                <option value="name-desc">Name: Z to A</option>
+              </select>
+            </div>
+
+            {/* Clear All Filters */}
+            {hasActiveFilters && (
+              <button
+                type="button"
+                style={styles.resetFiltersBtn}
+                onClick={resetAllFilters}
+              >
+                <RotateCcw size={13} />
+                <span>Reset Filters</span>
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+
       {/* Interactive Category Filter Pills */}
-      <div id="catalog-section" style={{ marginTop: '36px', marginBottom: '16px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+      <div style={{ marginTop: '24px', marginBottom: '16px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
           <div className="section-title" style={{ margin: 0 }}>Browse by Category</div>
-          <span style={{ fontSize: '13px', color: 'var(--slate)' }}>
+          <span style={{ fontSize: '13px', color: 'var(--slate)', fontWeight: '500' }}>
             Showing {filteredProducts.length} of {products.length} products
           </span>
         </div>
@@ -162,6 +383,7 @@ export default function Home() {
         </div>
       </div>
 
+      {/* Product Grid / Loading / Empty State */}
       {loading ? (
         <div className="spinner" />
       ) : error ? (
@@ -170,9 +392,33 @@ export default function Home() {
           <p>{error}</p>
         </div>
       ) : filteredProducts.length === 0 ? (
-        <div className="empty-state">
-          <h3>No products in this category</h3>
-          <p>Try selecting another category or clear your filter.</p>
+        <div style={styles.emptySearchCard}>
+          <div style={styles.emptyIconCircle}>
+            <Search size={32} color="var(--slate)" />
+          </div>
+          <h3 style={styles.emptyTitle}>No matching products found</h3>
+          <p style={styles.emptyDesc}>
+            {searchQuery
+              ? `We couldn't find any products matching "${searchQuery}" with the current filters.`
+              : 'No products match the selected filters.'}
+          </p>
+
+          <div style={styles.emptyActions}>
+            {hasActiveFilters && (
+              <button className="btn btn-secondary" onClick={resetAllFilters}>
+                <RotateCcw size={15} />
+                <span>Clear All Filters</span>
+              </button>
+            )}
+
+            <button
+              className="btn btn-primary"
+              onClick={() => openChatWithPrompt(searchQuery ? `Can you help me find products similar to "${searchQuery}"?` : "Show me popular tech products")}
+            >
+              <Bot size={16} color="#fff" />
+              <span>Ask AI Concierge to Find Items</span>
+            </button>
+          </div>
         </div>
       ) : (
         <div style={styles.grid}>
@@ -296,6 +542,176 @@ const styles = {
     fontSize: '10.5px',
     color: 'var(--slate)'
   },
+  searchSection: {
+    background: 'var(--white)',
+    borderRadius: '24px',
+    padding: '22px 26px',
+    marginBottom: '16px',
+    border: '1px solid var(--border)',
+    boxShadow: 'var(--shadow-sm)',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '16px'
+  },
+  searchBarRow: {
+    display: 'flex',
+    gap: '12px',
+    alignItems: 'center',
+    flexWrap: 'wrap'
+  },
+  searchInputWrapper: {
+    position: 'relative',
+    flex: 1,
+    minWidth: '280px',
+    display: 'flex',
+    alignItems: 'center'
+  },
+  searchIcon: {
+    position: 'absolute',
+    left: '16px',
+    pointerEvents: 'none'
+  },
+  searchInput: {
+    width: '100%',
+    padding: '13px 42px 13px 46px',
+    borderRadius: '16px',
+    border: '1.5px solid var(--border)',
+    background: 'var(--cream)',
+    fontSize: '14px',
+    color: 'var(--ink)',
+    outline: 'none',
+    transition: 'border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease'
+  },
+  clearSearchBtn: {
+    position: 'absolute',
+    right: '12px',
+    background: 'rgba(0, 0, 0, 0.08)',
+    border: 'none',
+    width: '24px',
+    height: '24px',
+    borderRadius: '50%',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    cursor: 'pointer',
+    color: 'var(--slate)',
+    transition: 'background 0.15s ease'
+  },
+  aiSearchBtn: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '8px',
+    background: 'linear-gradient(135deg, var(--coral) 0%, var(--coral-dark) 100%)',
+    color: '#ffffff',
+    border: 'none',
+    borderRadius: '14px',
+    padding: '13px 20px',
+    fontSize: '13.5px',
+    fontWeight: '700',
+    cursor: 'pointer',
+    boxShadow: '0 4px 14px rgba(240, 101, 74, 0.3)',
+    transition: 'all 0.2s ease',
+    whiteSpace: 'nowrap'
+  },
+  trendingRow: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '12px',
+    flexWrap: 'wrap',
+    fontSize: '12.5px'
+  },
+  trendingLabel: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '5px',
+    fontWeight: '700',
+    color: 'var(--ink)',
+    flexShrink: 0
+  },
+  trendingTags: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    flexWrap: 'wrap'
+  },
+  trendingTag: {
+    padding: '5px 12px',
+    borderRadius: '20px',
+    border: '1px solid',
+    fontSize: '12px',
+    fontWeight: '600',
+    cursor: 'pointer',
+    transition: 'all 0.15s ease'
+  },
+  toolbar: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingTop: '14px',
+    borderTop: '1px solid var(--border)',
+    flexWrap: 'wrap',
+    gap: '14px'
+  },
+  toolbarLeft: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '14px',
+    flexWrap: 'wrap'
+  },
+  toolbarRight: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '14px',
+    flexWrap: 'wrap'
+  },
+  filterGroup: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    fontSize: '13px'
+  },
+  filterLabel: {
+    fontWeight: '600',
+    color: 'var(--slate)',
+    fontSize: '12.5px'
+  },
+  select: {
+    padding: '7px 12px',
+    borderRadius: '10px',
+    border: '1.5px solid var(--border)',
+    background: 'var(--cream)',
+    fontSize: '13px',
+    fontWeight: '600',
+    color: 'var(--ink)',
+    outline: 'none',
+    cursor: 'pointer'
+  },
+  instantToggle: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '6px',
+    padding: '7px 13px',
+    borderRadius: '10px',
+    border: '1.5px solid',
+    fontSize: '12.5px',
+    fontWeight: '700',
+    cursor: 'pointer',
+    transition: 'all 0.15s ease'
+  },
+  resetFiltersBtn: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '5px',
+    background: 'none',
+    border: 'none',
+    color: 'var(--coral)',
+    fontSize: '12.5px',
+    fontWeight: '700',
+    cursor: 'pointer',
+    padding: '6px 8px',
+    borderRadius: '8px',
+    transition: 'background 0.15s ease'
+  },
   cats: {
     display: 'flex',
     gap: '10px',
@@ -318,5 +734,48 @@ const styles = {
     display: 'grid',
     gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))',
     gap: '20px'
+  },
+  emptySearchCard: {
+    background: 'var(--white)',
+    borderRadius: '24px',
+    padding: '48px 32px',
+    textAlign: 'center',
+    border: '1.5px dashed var(--sand)',
+    margin: '20px 0',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: '12px'
+  },
+  emptyIconCircle: {
+    width: '64px',
+    height: '64px',
+    borderRadius: '50%',
+    background: 'var(--cream)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: '4px'
+  },
+  emptyTitle: {
+    fontFamily: 'var(--font-brand)',
+    fontSize: '20px',
+    fontWeight: '700',
+    color: 'var(--ink)',
+    margin: 0
+  },
+  emptyDesc: {
+    fontSize: '14px',
+    color: 'var(--slate)',
+    maxWidth: '480px',
+    margin: 0,
+    lineHeight: 1.5
+  },
+  emptyActions: {
+    display: 'flex',
+    gap: '12px',
+    marginTop: '12px',
+    flexWrap: 'wrap',
+    justifyContent: 'center'
   }
 };

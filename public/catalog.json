@@ -1,0 +1,301 @@
+{
+  "spec": "ACP/1.0",
+  "standard": "Agent Commerce Protocol",
+  "generated_at": "2026-09-01T11:58:19.135Z",
+  "merchant": {
+    "id": "merchant_agentcart_01",
+    "name": "AgentCart Autonomous Electronics Store",
+    "currency": "INR",
+    "policy_gate": {
+      "max_autonomous_order_value": 100000,
+      "max_discount_percent": 10,
+      "requires_signature_verification": true
+    }
+  },
+  "endpoints": {
+    "catalog": "/api/catalog.json",
+    "propose_order": "/api/orders/confirm",
+    "verify_order": "/api/orders/verify",
+    "order_status": "/api/orders/:id/status"
+  },
+  "items": [
+    {
+      "id": "prod_macbook_air_m3",
+      "name": "Apple MacBook Air 13.6-inch M3",
+      "price": 114900,
+      "currency": "INR",
+      "category": "laptops",
+      "description": "Liquid Retina display, 8-core CPU, 10-core GPU, 18-hour battery life, 256GB SSD in Midnight.",
+      "in_stock": true,
+      "autonomous_checkout_eligible": false,
+      "cross_sell_ids": [
+        "prod_usbc_hub_7in1",
+        "prod_laptopstand_aluminium"
+      ]
+    },
+    {
+      "id": "prod_iphone_15_pro",
+      "name": "Apple iPhone 15 Pro (128GB, Natural Titanium)",
+      "price": 129900,
+      "currency": "INR",
+      "category": "smartphones",
+      "description": "Aerospace-grade titanium design, A17 Pro chip, Action button, 48MP main camera system with 3x Telephoto.",
+      "in_stock": true,
+      "autonomous_checkout_eligible": false,
+      "cross_sell_ids": [
+        "prod_phonecase_iphone15",
+        "prod_screenprotector_iphone15",
+        "prod_charger_65w_gan"
+      ]
+    },
+    {
+      "id": "prod_phonecase_iphone15",
+      "name": "iPhone 15 MagSafe Armor Silicone Case",
+      "price": 599,
+      "currency": "INR",
+      "category": "accessories",
+      "description": "Soft-touch silicone with built-in N52 strong magnets and military grade 2-meter drop protection.",
+      "in_stock": true,
+      "autonomous_checkout_eligible": true,
+      "cross_sell_ids": [
+        "prod_screenprotector_iphone15",
+        "prod_cable_usbc_240w"
+      ]
+    },
+    {
+      "id": "prod_screenprotector_iphone15",
+      "name": "iPhone 15 9H Tempered Glass Screen Protector",
+      "price": 199,
+      "currency": "INR",
+      "category": "accessories",
+      "description": "9H diamond-grade hardness, oleophobic anti-fingerprint coating, bubble-free alignment frame.",
+      "in_stock": true,
+      "autonomous_checkout_eligible": true,
+      "cross_sell_ids": [
+        "prod_phonecase_iphone15"
+      ]
+    },
+    {
+      "id": "prod_ipad_air_m2",
+      "name": "Apple iPad Air 11-inch M2 (128GB, Space Gray)",
+      "price": 59900,
+      "currency": "INR",
+      "category": "tablets",
+      "description": "Stunning Liquid Retina display, blazing fast M2 chip, Landscape 12MP front camera, Wi-Fi 6E.",
+      "in_stock": true,
+      "autonomous_checkout_eligible": true,
+      "cross_sell_ids": [
+        "prod_usbc_hub_7in1",
+        "prod_charger_65w_gan"
+      ]
+    },
+    {
+      "id": "prod_headphones_wh1000xm5",
+      "name": "Sony WH-1000XM5 Wireless ANC Headphones",
+      "price": 29999,
+      "currency": "INR",
+      "category": "audio",
+      "description": "Industry-leading noise cancellation with 8 microphones, 30-hour battery, Hi-Res LDAC playback.",
+      "in_stock": true,
+      "autonomous_checkout_eligible": true,
+      "cross_sell_ids": [
+        "prod_headphonecase_wh1000xm5",
+        "prod_cable_usbc_240w"
+      ]
+    },
+    {
+      "id": "prod_headphonecase_wh1000xm5",
+      "name": "Sony WH-1000XM5 Hard EVA Travel Case",
+      "price": 1499,
+      "currency": "INR",
+      "category": "audio",
+      "description": "Custom molded hard shell case with accessory storage pouch and metal carabiner.",
+      "in_stock": true,
+      "autonomous_checkout_eligible": true,
+      "cross_sell_ids": [
+        "prod_headphones_wh1000xm5"
+      ]
+    },
+    {
+      "id": "prod_airpods_pro_2",
+      "name": "Apple AirPods Pro (2nd Gen with USB-C MagSafe Case)",
+      "price": 24900,
+      "currency": "INR",
+      "category": "audio",
+      "description": "H2 chip, 2x more Active Noise Cancellation, Adaptive Audio, Conversation Awareness, IP54 rated.",
+      "in_stock": true,
+      "autonomous_checkout_eligible": true,
+      "cross_sell_ids": [
+        "prod_charger_65w_gan",
+        "prod_apple_watch_ultra2"
+      ]
+    },
+    {
+      "id": "prod_apple_watch_ultra2",
+      "name": "Apple Watch Ultra 2 (GPS + Cellular, 49mm Titanium)",
+      "price": 89900,
+      "currency": "INR",
+      "category": "wearables",
+      "description": "Rugged 49mm titanium case, 3000 nits display, precision dual-frequency GPS, 36-hr battery life.",
+      "in_stock": true,
+      "autonomous_checkout_eligible": true,
+      "cross_sell_ids": [
+        "prod_airpods_pro_2",
+        "prod_charger_65w_gan"
+      ]
+    },
+    {
+      "id": "prod_ps5_dualsense_controller",
+      "name": "PlayStation 5 DualSense Wireless Controller",
+      "price": 4999,
+      "currency": "INR",
+      "category": "gaming",
+      "description": "Immersive haptic feedback, dynamic adaptive triggers, built-in microphone and motion sensor.",
+      "in_stock": true,
+      "autonomous_checkout_eligible": true,
+      "cross_sell_ids": [
+        "prod_cable_usbc_240w",
+        "prod_powerbank_20000"
+      ]
+    },
+    {
+      "id": "prod_keychron_k2_pro",
+      "name": "Keychron K2 Pro Wireless Mechanical Keyboard",
+      "price": 4499,
+      "currency": "INR",
+      "category": "workspace",
+      "description": "75% compact layout, QMK/VIA programmable, hot-swappable mechanical switches, RGB backlighting.",
+      "in_stock": true,
+      "autonomous_checkout_eligible": true,
+      "cross_sell_ids": [
+        "prod_mx_master_3s",
+        "prod_usbc_hub_7in1"
+      ]
+    },
+    {
+      "id": "prod_mx_master_3s",
+      "name": "Logitech MX Master 3S Wireless Performance Mouse",
+      "price": 3899,
+      "currency": "INR",
+      "category": "workspace",
+      "description": "8000 DPI track-on-glass sensor, Quiet Clicks, MagSpeed electromagnetic scroll wheel.",
+      "in_stock": true,
+      "autonomous_checkout_eligible": true,
+      "cross_sell_ids": [
+        "prod_keychron_k2_pro",
+        "prod_laptopstand_aluminium"
+      ]
+    },
+    {
+      "id": "prod_laptopstand_aluminium",
+      "name": "Aluminium Ergonomic Laptop Stand",
+      "price": 1999,
+      "currency": "INR",
+      "category": "workspace",
+      "description": "Height and angle adjustable heavy-duty aluminium stand with heat dissipation vents.",
+      "in_stock": true,
+      "autonomous_checkout_eligible": true,
+      "cross_sell_ids": [
+        "prod_mx_master_3s",
+        "prod_macbook_air_m3"
+      ]
+    },
+    {
+      "id": "prod_usbc_hub_7in1",
+      "name": "7-in-1 Aluminum USB-C Hub & Multiport Adapter",
+      "price": 2499,
+      "currency": "INR",
+      "category": "workspace",
+      "description": "4K@60Hz HDMI, 100W Power Delivery, SD/microSD reader, 2x USB 3.2 Gen 2 ports in space grey.",
+      "in_stock": true,
+      "autonomous_checkout_eligible": true,
+      "cross_sell_ids": [
+        "prod_macbook_air_m3",
+        "prod_cable_usbc_240w"
+      ]
+    },
+    {
+      "id": "prod_keyboard_mouse_combo",
+      "name": "Logitech Wireless Keyboard & Optical Mouse Combo",
+      "price": 1799,
+      "currency": "INR",
+      "category": "workspace",
+      "description": "Reliable 2.4GHz wireless connection, spill-resistant keyboard, 36-month battery life.",
+      "in_stock": true,
+      "autonomous_checkout_eligible": true,
+      "cross_sell_ids": [
+        "prod_laptopstand_aluminium"
+      ]
+    },
+    {
+      "id": "prod_sony_zv_e10",
+      "name": "Sony Alpha ZV-E10 Mirrorless Creator Camera (16-50mm)",
+      "price": 61490,
+      "currency": "INR",
+      "category": "cameras",
+      "description": "24.2MP APS-C sensor, 4K HDR recording, Real-time Eye AF, directional 3-capsule mic with windscreen.",
+      "in_stock": true,
+      "autonomous_checkout_eligible": true,
+      "cross_sell_ids": [
+        "prod_usbc_hub_7in1",
+        "prod_powerbank_20000"
+      ]
+    },
+    {
+      "id": "prod_philips_hue_starter",
+      "name": "Philips Hue Smart Ambient Light Bar 2-Pack",
+      "price": 4899,
+      "currency": "INR",
+      "category": "smarthome",
+      "description": "16 million colors, sync with music and gaming, voice control with Alexa, Google Assistant & Apple Home.",
+      "in_stock": true,
+      "autonomous_checkout_eligible": true,
+      "cross_sell_ids": [
+        "prod_keychron_k2_pro",
+        "prod_charger_65w_gan"
+      ]
+    },
+    {
+      "id": "prod_charger_65w_gan",
+      "name": "65W GaN Dual-Port USB-C Rapid Charger",
+      "price": 2499,
+      "currency": "INR",
+      "category": "charging",
+      "description": "Gallium Nitride tech delivers up to 65W PD 3.0 via USB-C plus 18W QC via USB-A.",
+      "in_stock": true,
+      "autonomous_checkout_eligible": true,
+      "cross_sell_ids": [
+        "prod_cable_usbc_240w",
+        "prod_powerbank_20000"
+      ]
+    },
+    {
+      "id": "prod_cable_usbc_240w",
+      "name": "240W Braided USB-C to USB-C Fast Charging Cable (2m)",
+      "price": 799,
+      "currency": "INR",
+      "category": "charging",
+      "description": "E-Marker smart chip, 480Mbps data sync, heavy-duty nylon braided exterior with strain relief.",
+      "in_stock": true,
+      "autonomous_checkout_eligible": true,
+      "cross_sell_ids": [
+        "prod_charger_65w_gan",
+        "prod_powerbank_20000"
+      ]
+    },
+    {
+      "id": "prod_powerbank_20000",
+      "name": "20,000mAh 65W Laptop Power Bank with Smart LED Display",
+      "price": 3499,
+      "currency": "INR",
+      "category": "charging",
+      "description": "High-capacity power bank capable of charging laptops, phones, and wearables with real-time wattage screen.",
+      "in_stock": true,
+      "autonomous_checkout_eligible": true,
+      "cross_sell_ids": [
+        "prod_cable_usbc_240w",
+        "prod_charger_65w_gan"
+      ]
+    }
+  ]
+}

@@ -45,7 +45,7 @@ prompt — you cannot override them by asking nicely, and you should not try.
 
 Current limits (keep this table in sync with code):
 
-- Max order value: ₹5,000
+- Max order value: ₹1,00,000
 - Max single-item discount: 10%
 - Payment capture: **always** requires explicit buyer confirmation, regardless of amount
 
@@ -125,7 +125,7 @@ If `get_order_status` returns a failed/declined payment:
 - Do not claim a payment succeeded without a confirmed `get_order_status`
   result.
 - Do not suggest more than one upsell per turn, or re-pitch a declined item.
-- Do not discuss or reveal the exact policy gate limits (e.g. the ₹5,000
+- Do not discuss or reveal the exact policy gate limits (e.g. the ₹1,00,000
   ceiling) unless the buyer's order is actually blocked by it — don't
   volunteer the number upfront.
 - Do not attempt to bypass the gate by splitting one order into multiple

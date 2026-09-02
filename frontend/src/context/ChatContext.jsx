@@ -1,22 +1,43 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect, useRef } from 'react';
 import { sendChatMessage, createOrder, verifyOrderPayment, reportOrderFailure, getStoredToken, getStoredUser } from '../api/client';
+import { useAuth } from './AuthContext';
 
 const ChatContext = createContext(null);
 
+const DEFAULT_WELCOME_MESSAGE = {
+  id: 'welcome',
+  role: 'agent',
+  text: "👋 Hi! I'm your AgentCart electronics assistant. Tell me what tech or gear you're looking for, and I'll find matches, suggest cross-sells, and guide you through verified checkout."
+};
+
 export function ChatProvider({ children }) {
-  const [messages, setMessages] = useState([
-    {
-      id: 'welcome',
-      role: 'agent',
-      text: "👋 Hi! I'm your AgentCart electronics assistant. Tell me what tech or gear you're looking for, and I'll find matches, suggest cross-sells, and guide you through verified checkout."
-    }
-  ]);
+  const { user } = useAuth();
+  const userId = user?._id || user?.id || user?.email || 'guest';
+  const prevUserIdRef = useRef(userId);
+
+  const [messages, setMessages] = useState([DEFAULT_WELCOME_MESSAGE]);
   const [history, setHistory] = useState([]);
   const [isOpen, setIsOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const [isTyping, setIsTyping] = useState(false);
   const [orderId, setOrderId] = useState(null);
   const [prefilledInput, setPrefilledInput] = useState('');
+
+  const resetChat = useCallback(() => {
+    setMessages([{ ...DEFAULT_WELCOME_MESSAGE, id: 'welcome-' + Date.now() }]);
+    setHistory([]);
+    setOrderId(null);
+    setPrefilledInput('');
+    setUnreadCount(0);
+  }, []);
+
+  // Clear previous user's chat when user logs in, logs out, or switches accounts
+  useEffect(() => {
+    if (prevUserIdRef.current !== userId) {
+      prevUserIdRef.current = userId;
+      resetChat();
+    }
+  }, [userId, resetChat]);
 
   const toggleChat = useCallback(() => {
     setIsOpen(prev => {
@@ -53,7 +74,10 @@ export function ChatProvider({ children }) {
       const agentMsg = {
         id: 'agent-' + Date.now(),
         role: 'agent',
-        text: data.reply
+        text: data.reply,
+        items: data.proposedOrder?.items || null,
+        total: data.proposedOrder?.total || null,
+        upsell: data.upsell || null
       };
 
       setMessages(prev => [...prev, agentMsg]);
@@ -223,7 +247,8 @@ export function ChatProvider({ children }) {
     openChatWithPrompt,
     sendMessage,
     processCheckout,
-    setOrderId
+    setOrderId,
+    resetChat
   };
 
   return <ChatContext.Provider value={value}>{children}</ChatContext.Provider>;

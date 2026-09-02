@@ -51,6 +51,24 @@ export const CATEGORY_THEMES = {
     catBg: 'var(--coral)',
     label: 'Cameras & Video'
   },
+  gaming: {
+    bg: 'var(--lavender-bg)',
+    stroke: 'var(--lavender)',
+    catBg: 'var(--coral)',
+    label: 'Gaming & Consoles'
+  },
+  tablets: {
+    bg: 'var(--sage-bg)',
+    stroke: 'var(--sage)',
+    catBg: 'var(--coral)',
+    label: 'Tablets & Creative'
+  },
+  smarthome: {
+    bg: 'var(--mustard-bg)',
+    stroke: 'var(--mustard)',
+    catBg: 'var(--sage)',
+    label: 'Smart Home & Lighting'
+  },
   workspace: {
     bg: 'var(--sage-bg)',
     stroke: 'var(--sage)',

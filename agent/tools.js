@@ -121,9 +121,12 @@ const toolSchemas = [
             items: {
               type: 'object',
               properties: {
-                price: { type: 'number' },
-                qty: { type: 'number' }
-              }
+                id: { type: 'string', description: 'Product ID' },
+                name: { type: 'string', description: 'Product name' },
+                price: { type: 'number', description: 'Product price in INR' },
+                qty: { type: 'number', description: 'Quantity' }
+              },
+              required: ['name', 'price']
             }
           },
           discountPercent: { type: 'number' },

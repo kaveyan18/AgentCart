@@ -51,6 +51,8 @@ async function executeAgentTurn(sanitizedHistory, userMessage, context = {}) {
   ];
 
   const MAX_TOOL_TURNS = 6;
+  let proposedOrder = null;
+  let upsell = null;
 
   for (let turn = 0; turn < MAX_TOOL_TURNS; turn++) {
     const response = await groq.chat.completions.create({
@@ -80,7 +82,9 @@ async function executeAgentTurn(sanitizedHistory, userMessage, context = {}) {
 
       return {
         reply: cleanReply,
-        history: nextCleanHistory
+        history: nextCleanHistory,
+        proposedOrder,
+        upsell
       };
     }
 
@@ -108,6 +112,19 @@ async function executeAgentTurn(sanitizedHistory, userMessage, context = {}) {
       }
 
       const result = await fn(args, context);
+
+      if (call.function.name === 'propose_order' && result && result.status === 'pending_confirmation') {
+        proposedOrder = {
+          items: args.items,
+          total: result.total,
+          status: result.status
+        };
+      }
+
+      if (call.function.name === 'get_upsell_candidates' && Array.isArray(result) && result.length > 0) {
+        upsell = result[0];
+      }
+
       messages.push({
         role: 'tool',
         tool_call_id: call.id,
@@ -122,7 +139,9 @@ async function executeAgentTurn(sanitizedHistory, userMessage, context = {}) {
       ...sanitizedHistory,
       { role: 'user', content: userMessage },
       { role: 'assistant', content: "I found the details for your request!" }
-    ].slice(-6)
+    ].slice(-6),
+    proposedOrder,
+    upsell
   };
 }
 
