@@ -101,7 +101,7 @@ export function ChatProvider({ children }) {
   }, [history, isOpen]);
 
   // Razorpay Checkout Trigger
-  const processCheckout = useCallback(async (items, navigate, deliveryInfo = {}) => {
+  const processCheckout = useCallback(async (items, navigate, deliveryInfo = {}, onSuccess = null) => {
     if (!items || items.length === 0) return;
 
     const token = getStoredToken();
@@ -117,7 +117,7 @@ export function ChatProvider({ children }) {
         }
       ]);
       if (navigate) {
-        navigate('/login?redirect=/');
+        navigate('/login?redirect=/cart');
       }
       return;
     }
@@ -133,6 +133,9 @@ export function ChatProvider({ children }) {
       const orderData = await createOrder(items, 0, deliveryInfo);
       setOrderId(orderData.orderId);
 
+      const rawPhone = deliveryInfo.phone || currentUser?.phone || '9999999999';
+      const cleanContact = rawPhone.replace(/[^0-9]/g, '').slice(-10) || '9999999999';
+
       const options = {
         key: orderData.keyId,
         amount: orderData.amount,
@@ -144,7 +147,7 @@ export function ChatProvider({ children }) {
         prefill: {
           name: deliveryInfo.fullName || currentUser?.name || 'Customer',
           email: currentUser?.email || 'customer@example.com',
-          contact: deliveryInfo.phone || currentUser?.phone || '9999999999'
+          contact: cleanContact
         },
         handler: async function (response) {
           try {
@@ -154,6 +157,15 @@ export function ChatProvider({ children }) {
               razorpayOrderId: response.razorpay_order_id,
               razorpaySignature: response.razorpay_signature
             });
+
+            // Payment successfully verified -> invoke onSuccess callback to clear cart
+            if (typeof onSuccess === 'function') {
+              try {
+                onSuccess();
+              } catch (clearErr) {
+                console.warn('onSuccess callback error:', clearErr);
+              }
+            }
 
             // Notify agent so it can explain status
             await sendMessage(`Payment attempt completed for order ${orderData.orderId}, please check status and let the buyer know`);

@@ -43,7 +43,7 @@ When a product is too expensive to checkout (above ₹1,00,000):
 ## Tools — always call these, never fabricate data:
 - `search_catalog(query)` — Find products by name, keyword, or category.
 - `get_upsell_candidates(productId)` — Get cross-sell items linked to a product.
-- `propose_order(items[], discountPercent, reason)` — Draft checkout once buyer confirms. State the items and total, and instruct the buyer to click the Pay button on the order card to complete payment.
+- `propose_order(items[], discountPercent, reason)` — Draft items into the buyer's cart once confirmed. State the items and total, and instruct the buyer to review their Cart and proceed to checkout.
 - `get_order_status(orderId)` — Check payment status after checkout.
 
 ---

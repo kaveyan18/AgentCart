@@ -1,14 +1,24 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Star, ArrowUpRight, Sparkles } from 'lucide-react';
+import { Star, ArrowUpRight, Sparkles, ShoppingCart, Check } from 'lucide-react';
 import { formatPrice, getCategoryTheme, getProductImage } from '../utils/helpers';
 import { useChat } from '../context/ChatContext';
+import { useCart } from '../context/CartContext';
 
 export default function ProductCard({ product }) {
   const navigate = useNavigate();
   const { openChatWithPrompt } = useChat();
+  const { addToCart } = useCart();
+  const [justAdded, setJustAdded] = useState(false);
   const theme = getCategoryTheme(product.category);
   const imageUrl = getProductImage(product._id);
+
+  const handleQuickAdd = (e) => {
+    e.stopPropagation();
+    addToCart(product, 1);
+    setJustAdded(true);
+    setTimeout(() => setJustAdded(false), 1800);
+  };
 
   return (
     <div
@@ -54,17 +64,32 @@ export default function ProductCard({ product }) {
             <div style={styles.price}>{formatPrice(product.price)}</div>
           </div>
 
-          <button
-            style={styles.aiButton}
-            title="Ask AI about this"
-            onClick={(e) => {
-              e.stopPropagation();
-              openChatWithPrompt(`Tell me more about the ${product.name} and add it to my cart`);
-            }}
-          >
-            <Sparkles size={14} color="#fff" />
-            <span>AI Ask</span>
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <button
+              style={{
+                ...styles.cartButton,
+                background: justAdded ? '#16a34a' : 'var(--cream)',
+                color: justAdded ? '#ffffff' : 'var(--ink)'
+              }}
+              title={justAdded ? "Added to Cart!" : "Add to Cart"}
+              onClick={handleQuickAdd}
+            >
+              {justAdded ? <Check size={14} /> : <ShoppingCart size={14} />}
+              <span>{justAdded ? "Added" : "+ Cart"}</span>
+            </button>
+
+            <button
+              style={styles.aiButton}
+              title="Ask AI about this"
+              onClick={(e) => {
+                e.stopPropagation();
+                openChatWithPrompt(`Tell me more about the ${product.name} and add it to my cart`);
+              }}
+            >
+              <Sparkles size={14} color="#fff" />
+              <span>AI</span>
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -167,6 +192,18 @@ const styles = {
     fontWeight: '700',
     color: 'var(--coral-dark)'
   },
+  cartButton: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '4px',
+    border: '1px solid var(--sand)',
+    borderRadius: '10px',
+    padding: '7px 10px',
+    fontSize: '11.5px',
+    fontWeight: '700',
+    cursor: 'pointer',
+    transition: 'all 0.15s ease'
+  },
   aiButton: {
     display: 'inline-flex',
     alignItems: 'center',
@@ -175,7 +212,7 @@ const styles = {
     color: '#ffffff',
     border: 'none',
     borderRadius: '10px',
-    padding: '7px 12px',
+    padding: '7px 10px',
     fontSize: '12px',
     fontWeight: '600',
     cursor: 'pointer',

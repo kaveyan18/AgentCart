@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
-import { Sparkles, ShoppingBag, User, ShieldCheck, LogOut, ChevronDown, LogIn, UserPlus } from 'lucide-react';
+import { Sparkles, ShoppingBag, ShoppingCart, User, ShieldCheck, LogOut, ChevronDown, LogIn, UserPlus } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useCart } from '../context/CartContext';
 
 export default function Nav() {
   const { user, isAuthenticated, logout } = useAuth();
+  const { cartCount } = useCart();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const navigate = useNavigate();
 
@@ -39,6 +41,22 @@ export default function Nav() {
           Catalog
         </NavLink>
         <NavLink
+          to="/cart"
+          style={({ isActive }) => ({
+            ...styles.link,
+            color: isActive ? 'var(--coral)' : 'var(--ink)',
+            fontWeight: isActive ? '600' : '500',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '6px'
+          })}
+        >
+          <span>Cart</span>
+          {cartCount > 0 && (
+            <span style={styles.navCartPill}>{cartCount}</span>
+          )}
+        </NavLink>
+        <NavLink
           to="/orders"
           style={({ isActive }) => ({
             ...styles.link,
@@ -69,6 +87,13 @@ export default function Nav() {
       </div>
 
       <div style={styles.actions}>
+        <Link to="/cart" title="Shopping Cart" style={styles.cartActionBtn}>
+          <ShoppingCart size={19} />
+          {cartCount > 0 && (
+            <span style={styles.cartBadge}>{cartCount}</span>
+          )}
+        </Link>
+
         <Link to="/orders" title="My Orders" style={styles.actionBtn}>
           <ShoppingBag size={18} />
         </Link>
@@ -230,10 +255,51 @@ const styles = {
     borderRadius: '6px',
     textTransform: 'uppercase'
   },
+  navCartPill: {
+    fontSize: '11px',
+    fontWeight: '700',
+    background: 'var(--coral)',
+    color: '#fff',
+    padding: '1px 6px',
+    borderRadius: '10px',
+    lineHeight: '1.2'
+  },
   actions: {
     display: 'flex',
     alignItems: 'center',
     gap: '14px'
+  },
+  cartActionBtn: {
+    position: 'relative',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '38px',
+    height: '38px',
+    borderRadius: '11px',
+    background: 'var(--coral)',
+    color: '#ffffff',
+    textDecoration: 'none',
+    cursor: 'pointer',
+    transition: 'transform 0.15s ease, background 0.15s ease',
+    boxShadow: '0 3px 10px rgba(240, 101, 74, 0.25)'
+  },
+  cartBadge: {
+    position: 'absolute',
+    top: '-5px',
+    right: '-5px',
+    background: 'var(--ink)',
+    color: '#fff',
+    fontSize: '10.5px',
+    fontWeight: '800',
+    minWidth: '18px',
+    height: '18px',
+    borderRadius: '9px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: '0 4px',
+    border: '2px solid var(--white)'
   },
   actionBtn: {
     display: 'flex',

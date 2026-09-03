@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ShieldCheck, Lock, Check, MapPin, Phone, User, Edit3, ChevronDown, ChevronUp } from 'lucide-react';
+import { ShieldCheck, Lock, Check, MapPin, Phone, User, Edit3, ChevronDown, ChevronUp, ShoppingCart, ArrowRight } from 'lucide-react';
 import { formatPrice } from '../utils/helpers';
 import { useAuth } from '../context/AuthContext';
 
@@ -135,18 +135,19 @@ export default function GateCard({ items = [], total, onConfirm, isProcessing })
         )}
       </div>
 
-      {/* Checkout Button */}
+      {/* Review in Cart & Checkout Button */}
       <button
         style={styles.confirmBtn}
         onClick={handleConfirmClick}
         disabled={isProcessing}
       >
-        <Lock size={14} color="#fff" />
-        <span>{isProcessing ? 'Opening Razorpay…' : `Pay ${formatPrice(displayTotal)} via Razorpay`}</span>
+        <ShoppingCart size={15} color="#fff" />
+        <span>Review in Cart & Checkout • {formatPrice(displayTotal)}</span>
+        <ArrowRight size={14} color="#fff" />
       </button>
 
       <div style={styles.securityNote}>
-        Direct HMAC-SHA256 signature verification & policy safety enabled
+        Every order is validated via policy gate and reviewed in your Cart
       </div>
     </div>
   );

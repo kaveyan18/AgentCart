@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Bot, Send, X, Sparkles, RotateCcw } from 'lucide-react';
 import { useChat } from '../context/ChatContext';
+import { useCart } from '../context/CartContext';
 import GateCard from './GateCard';
 import UpsellCard from './UpsellCard';
 
@@ -113,6 +114,8 @@ export default function ChatPanel() {
     resetChat
   } = useChat();
 
+  const { addToCart, addBundleToCart } = useCart();
+
   const [input, setInput] = useState('');
   const [isProcessingCheckout, setIsProcessingCheckout] = useState(false);
   const messagesEndRef = useRef(null);
@@ -152,13 +155,11 @@ export default function ChatPanel() {
     sendMessage(text);
   };
 
-  const handleCheckoutClick = async (items, deliveryInfo) => {
-    setIsProcessingCheckout(true);
-    try {
-      await processCheckout(items, navigate, deliveryInfo);
-    } finally {
-      setIsProcessingCheckout(false);
-    }
+  const handleCheckoutClick = (items, deliveryInfo) => {
+    // Add proposed items into the cart and navigate to /cart
+    addBundleToCart(items);
+    if (typeof closeChat === 'function') closeChat();
+    navigate('/cart');
   };
 
   return (
@@ -239,7 +240,10 @@ export default function ChatPanel() {
                 name={m.upsell.name}
                 price={m.upsell.price}
                 reason={m.upsell.reason}
-                onSelect={() => sendMessage(`Yes, please add the ${m.upsell.name} to my order`)}
+                onSelect={() => {
+                  addToCart({ id: m.upsell.id, name: m.upsell.name, price: m.upsell.price });
+                  sendMessage(`Yes, please add the ${m.upsell.name} to my cart`);
+                }}
               />
             )}
           </React.Fragment>

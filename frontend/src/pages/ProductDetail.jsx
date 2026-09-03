@@ -8,21 +8,26 @@ import {
   RotateCcw,
   CreditCard,
   CheckCircle2,
-  ArrowLeft
+  ArrowLeft,
+  ShoppingCart,
+  Check
 } from 'lucide-react';
 import Nav from '../components/Nav';
 import { getProducts } from '../api/client';
 import { formatPrice, getCategoryTheme, getProductImage } from '../utils/helpers';
 import { useChat } from '../context/ChatContext';
+import { useCart } from '../context/CartContext';
 
 export default function ProductDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { openChatWithPrompt, processCheckout } = useChat();
+  const { openChatWithPrompt } = useChat();
+  const { addToCart } = useCart();
 
   const [product, setProduct] = useState(null);
   const [relatedProducts, setRelatedProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [addedFeedback, setAddedFeedback] = useState(false);
 
   useEffect(() => {
     async function loadData() {
@@ -150,19 +155,44 @@ export default function ProductDetail() {
             <button
               className="btn btn-primary"
               style={styles.mainActionBtn}
-              onClick={() => openChatWithPrompt(`I want to buy the ${product.name}, can you suggest matching add-ons?`)}
+              onClick={() => {
+                addToCart(product, 1);
+                setAddedFeedback(true);
+                setTimeout(() => setAddedFeedback(false), 2200);
+              }}
             >
-              <Sparkles size={16} color="#fff" />
-              <span>Ask AI to Add & Bundle</span>
+              {addedFeedback ? (
+                <>
+                  <Check size={18} color="#fff" />
+                  <span>Added to Cart!</span>
+                </>
+              ) : (
+                <>
+                  <ShoppingCart size={18} color="#fff" />
+                  <span>Add to Cart</span>
+                </>
+              )}
             </button>
             <button
               className="btn btn-secondary"
               style={styles.secondaryActionBtn}
-              onClick={() => processCheckout([{ name: product.name, price: product.price, qty: 1 }], navigate)}
+              onClick={() => {
+                addToCart(product, 1);
+                navigate('/cart');
+              }}
             >
-              Instant Checkout
+              <span>View in Cart</span>
             </button>
           </div>
+
+          <button
+            type="button"
+            style={styles.askAiBannerBtn}
+            onClick={() => openChatWithPrompt(`I want to add the ${product.name} to my cart, what accessories match it?`)}
+          >
+            <Sparkles size={15} color="var(--coral)" />
+            <span>Ask AI Concierge to Find Accessories & Bundle</span>
+          </button>
 
           {/* Related Products Strip */}
           {relatedProducts.length > 0 && (
@@ -319,13 +349,33 @@ const styles = {
   pdActions: {
     display: 'flex',
     gap: '14px',
-    marginBottom: '28px'
+    marginBottom: '16px'
   },
   mainActionBtn: {
-    flex: 1.2
+    flex: 1.2,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '8px'
   },
   secondaryActionBtn: {
     flex: 1
+  },
+  askAiBannerBtn: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '8px',
+    background: 'rgba(240, 101, 74, 0.08)',
+    border: '1px solid rgba(240, 101, 74, 0.25)',
+    borderRadius: '12px',
+    padding: '10px 16px',
+    fontSize: '13px',
+    fontWeight: '600',
+    color: 'var(--coral-dark)',
+    cursor: 'pointer',
+    marginBottom: '24px',
+    transition: 'background 0.15s ease'
   },
   relatedSection: {
     marginTop: 'auto',
