@@ -6,6 +6,7 @@ import { ChatProvider } from './context/ChatContext';
 import Home from './pages/Home';
 import ProductDetail from './pages/ProductDetail';
 import Cart from './pages/Cart';
+import CheckoutConfirm from './pages/CheckoutConfirm';
 import OrderConfirmed from './pages/OrderConfirmed';
 import OrderHistory from './pages/OrderHistory';
 import Profile from './pages/Profile';
@@ -26,16 +27,40 @@ export default function App() {
             <Route path="/" element={<Home />} />
             <Route path="/cart" element={<Cart />} />
             <Route path="/product/:id" element={<ProductDetail />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<Signup />} />
-          <Route
-            path="/confirm"
-            element={
-              <ProtectedRoute>
-                <OrderConfirmed />
-              </ProtectedRoute>
-            }
-          />
+            <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<Signup />} />
+            <Route
+              path="/confirm"
+              element={
+                <ProtectedRoute>
+                  <CheckoutConfirm />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/checkout"
+              element={
+                <ProtectedRoute>
+                  <CheckoutConfirm />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/order-success"
+              element={
+                <ProtectedRoute>
+                  <OrderConfirmed />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/order-confirmed"
+              element={
+                <ProtectedRoute>
+                  <OrderConfirmed />
+                </ProtectedRoute>
+              }
+            />
           <Route
             path="/orders"
             element={

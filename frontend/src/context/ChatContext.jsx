@@ -171,7 +171,7 @@ export function ChatProvider({ children }) {
             await sendMessage(`Payment attempt completed for order ${orderData.orderId}, please check status and let the buyer know`);
 
             if (navigate) {
-              navigate('/confirm', {
+              navigate('/order-success', {
                 state: {
                   success: true,
                   orderId: orderData.orderId,
@@ -220,7 +220,7 @@ export function ChatProvider({ children }) {
         await sendMessage(`Payment failed for order ${orderData.orderId} (${errorDesc}), please check status and explain to the buyer`);
 
         if (navigate) {
-          navigate('/confirm', {
+          navigate('/order-success', {
             state: {
               success: false,
               orderId: orderData.orderId,

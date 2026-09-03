@@ -15,6 +15,7 @@ export default function OrderConfirmed() {
     orderId = '6A9183A4',
     items = [{ name: 'iPhone 15 Silicone Case', price: 599, qty: 1 }, { name: 'iPhone 15 Tempered Glass Screen Protector', price: 199, qty: 1 }],
     total = 798,
+    delivery = null,
     errorReason = 'Card declined by issuing bank'
   } = location.state || {};
 
@@ -89,6 +90,17 @@ export default function OrderConfirmed() {
                 </div>
               </div>
 
+              {delivery && (
+                <div style={{ background: 'var(--cream)', borderRadius: '12px', padding: '12px 16px', margin: '16px 0', fontSize: '13px', textAlign: 'left', border: '1px solid var(--border)' }}>
+                  <div style={{ fontWeight: '700', color: 'var(--ink)', marginBottom: '3px' }}>
+                    Shipping to: {delivery.fullName} ({delivery.phone})
+                  </div>
+                  <div style={{ color: 'var(--slate)' }}>
+                    {delivery.shippingAddress?.street || delivery.street}, {delivery.shippingAddress?.city || delivery.city}, {delivery.shippingAddress?.state || delivery.state} – {delivery.shippingAddress?.postalCode || delivery.postalCode}
+                  </div>
+                </div>
+              )}
+
               <div style={styles.actionButtons}>
                 <button
                   className="btn btn-primary btn-full"
@@ -124,7 +136,7 @@ export default function OrderConfirmed() {
               <div style={styles.actionButtons}>
                 <button
                   className="btn btn-primary btn-full"
-                  onClick={() => navigate('/')}
+                  onClick={() => navigate('/confirm')}
                 >
                   <span>Retry Payment</span>
                 </button>

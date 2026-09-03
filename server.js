@@ -15,9 +15,23 @@ const AuditLog = require('./models/AuditLog');
 const app = express();
 connectDB();
 
-// 1. CORS for Vite dev server (and any local client)
+// 1. CORS for Vite dev server, Vercel frontend, and production origins
+const allowedOrigins = [
+  'http://localhost:5173',
+  'http://127.0.0.1:5173',
+  'http://localhost:3000',
+  process.env.CLIENT_URL,
+  process.env.FRONTEND_URL
+].filter(Boolean);
+
 app.use(cors({
-  origin: ['http://localhost:5173', 'http://127.0.0.1:5173', 'http://localhost:3000'],
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin) || origin.endsWith('.vercel.app')) {
+      callback(null, true);
+    } else {
+      callback(null, true); // Allow client requests in production
+    }
+  },
   credentials: true
 }));
 

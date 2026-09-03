@@ -47,41 +47,27 @@ export default function Cart() {
 
   const isOverAiAutonomousLimit = cartTotal > 100000;
 
-  const handleProceedToCheckout = async () => {
+  const handleProceedToCheckout = () => {
     if (cartItems.length === 0) return;
 
-    setCheckoutError(null);
-    setIsProcessing(true);
-
-    const deliveryInfo = {
-      fullName: delivery.fullName,
-      phone: delivery.phone,
-      isManualCheckout: true,
-      source: 'user',
-      shippingAddress: {
-        street: delivery.street,
-        city: delivery.city,
-        state: delivery.state,
-        postalCode: delivery.postalCode,
-        country: delivery.country
-      }
-    };
-
-    try {
-      await processCheckout(
-        cartItems,
-        navigate,
-        deliveryInfo,
-        () => {
-          // Callback invoked only on successful payment verification:
-          clearCart();
-        }
-      );
-    } catch (err) {
-      setCheckoutError(err.message || 'Payment could not be initiated.');
-    } finally {
-      setIsProcessing(false);
+    if (!isAuthenticated) {
+      navigate('/login?redirect=/confirm');
+      return;
     }
+
+    navigate('/confirm', {
+      state: {
+        delivery: {
+          fullName: delivery.fullName,
+          phone: delivery.phone,
+          street: delivery.street,
+          city: delivery.city,
+          state: delivery.state,
+          postalCode: delivery.postalCode,
+          country: delivery.country
+        }
+      }
+    });
   };
 
   return (
@@ -373,15 +359,9 @@ export default function Cart() {
                 type="button"
                 className="btn btn-primary"
                 style={styles.checkoutBtn}
-                disabled={isProcessing}
                 onClick={handleProceedToCheckout}
               >
-                <CreditCard size={18} />
-                <span>
-                  {isProcessing
-                    ? 'Initializing Razorpay…'
-                    : `Proceed to Checkout • ${formatPrice(cartTotal)}`}
-                </span>
+                <span>Proceed to Checkout • {formatPrice(cartTotal)}</span>
                 <ArrowRight size={16} />
               </button>
 
