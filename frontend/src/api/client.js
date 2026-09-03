@@ -162,3 +162,48 @@ export async function getOrderStatus(id) {
 export async function getAuditLogs() {
   return request('/orders/audit');
 }
+
+// ── 7. Server-Authoritative Cross-Device Cart API ────────────────────────────
+export async function getCartApi() {
+  return request('/cart');
+}
+
+export async function addToCartApi(productId, qty = 1, name = '', price = 0) {
+  return request('/cart/add', {
+    method: 'POST',
+    body: JSON.stringify({ productId, qty, name, price })
+  });
+}
+
+export async function addBundleToCartApi(items = []) {
+  return request('/cart/add', {
+    method: 'POST',
+    body: JSON.stringify({ items })
+  });
+}
+
+export async function updateCartItemApi(productId, qty) {
+  return request('/cart/update', {
+    method: 'PUT',
+    body: JSON.stringify({ productId, qty })
+  });
+}
+
+export async function removeCartItemApi(productId) {
+  return request(`/cart/remove/${productId}`, {
+    method: 'DELETE'
+  });
+}
+
+export async function clearCartApi() {
+  return request('/cart/clear', {
+    method: 'DELETE'
+  });
+}
+
+export async function mergeCartApi(items) {
+  return request('/cart/merge', {
+    method: 'POST',
+    body: JSON.stringify({ items })
+  });
+}

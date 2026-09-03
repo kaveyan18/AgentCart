@@ -155,8 +155,8 @@ async function validateAndCalculateCart(items = [], discountPercent = 0, Product
     subtotal += lineTotal;
 
     verifiedItems.push({
+      productId: id,
       id,
-      _id: id,
       name,
       price,
       qty,

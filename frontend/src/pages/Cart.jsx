@@ -139,7 +139,7 @@ export default function Cart() {
 
             <div style={styles.itemList}>
               {cartItems.map((item) => {
-                const prodId = item.id || item._id;
+                const prodId = item.productId || item.id || item._id;
                 const img = getProductImage(prodId);
                 const theme = getCategoryTheme(item.category);
                 const lineTotal = item.price * (item.qty || 1);

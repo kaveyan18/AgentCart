@@ -9,6 +9,7 @@ const requireMerchant = require('../middleware/requireMerchant');
 const Order = require('../models/Order');
 const AuditLog = require('../models/AuditLog');
 const User = require('../models/User');
+const Cart = require('../models/Cart');
 
 // 1. Audit log endpoint for merchant console (must come before /:id) — Merchant Protected
 router.get('/audit', requireMerchant, async (req, res) => {
@@ -61,8 +62,22 @@ router.post('/confirm', requireAuth, async (req, res) => {
     isManualCheckout = false
   } = req.body;
 
-  // 1. Never trust amount from AI or frontend — calculate actual amount from backend DB
-  const cartCalc = await validateAndCalculateCart(items, discountPercent);
+  // 1. Never trust cart array sent from frontend — read server-authoritative cart for req.userId
+  let candidateItems = items;
+  const userCart = await Cart.findOne({ userId: req.userId });
+  if (userCart && Array.isArray(userCart.items) && userCart.items.length > 0) {
+    candidateItems = userCart.items.map(i => ({
+      productId: i.productId,
+      id: i.productId,
+      _id: i.productId,
+      name: i.name,
+      price: i.price,
+      qty: i.qty
+    }));
+  }
+
+  // Calculate actual amount from canonical backend DB records
+  const cartCalc = await validateAndCalculateCart(candidateItems, discountPercent);
 
   if (cartCalc.verifiedItems.length === 0) {
     return res.status(400).json({ status: 'blocked', message: 'Cart contains no valid items' });
@@ -191,6 +206,15 @@ router.post('/verify', async (req, res) => {
     { status: 'paid' },
     { new: true }
   );
+
+  // Clear server cart for the authenticated buyer upon verified payment
+  if (order && order.userId) {
+    try {
+      await Cart.findOneAndUpdate({ userId: order.userId }, { items: [] });
+    } catch (clearErr) {
+      console.warn('Failed to clear server cart for user:', clearErr.message);
+    }
+  }
 
   await writeLog('payment_captured', `Order ${order?._id} payment verified & paid`, { razorpayOrderId, razorpayPaymentId }, order?.userId);
 

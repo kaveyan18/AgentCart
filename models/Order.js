@@ -1,5 +1,12 @@
 const mongoose = require('mongoose');
 
+const orderItemSchema = new mongoose.Schema({
+  productId: { type: mongoose.Schema.Types.Mixed },
+  name: { type: String, required: true },
+  price: { type: Number, required: true },
+  qty: { type: Number, default: 1 }
+}, { _id: false });
+
 const orderSchema = new mongoose.Schema({
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   userEmail: String,
@@ -12,7 +19,7 @@ const orderSchema = new mongoose.Schema({
     postalCode: { type: String, default: '' },
     country: { type: String, default: 'India' }
   },
-  items: [{ name: String, price: Number, qty: Number }],
+  items: [orderItemSchema],
   total: Number,
   status: { type: String, enum: ['created', 'paid', 'failed'], default: 'created' },
   razorpayOrderId: String,

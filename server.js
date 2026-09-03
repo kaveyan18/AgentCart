@@ -9,6 +9,7 @@ const orderRoutes = require('./routes/orders');
 const chatRoutes = require('./routes/chat');
 const webhookRoutes = require('./routes/webhook');
 const authRoutes = require('./routes/auth');
+const cartRoutes = require('./routes/cart');
 const AuditLog = require('./models/AuditLog');
 
 const app = express();
@@ -32,6 +33,7 @@ app.use('/api/auth', authRoutes);
 app.get('/api/catalog.json', (req, res, next) => { req.url = '/catalog.json'; productRoutes(req, res, next); });
 app.get('/catalog.json', (req, res, next) => { req.url = '/catalog.json'; productRoutes(req, res, next); });
 app.use('/api/products', productRoutes);
+app.use('/api/cart', cartRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/chat', chatRoutes);
 
