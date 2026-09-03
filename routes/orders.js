@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const crypto = require('crypto');
-const { reviewOrder } = require('../services/policyGate');
+const { reviewOrder, evaluateTransaction, validateAndCalculateCart } = require('../services/policyGate');
 const { createRazorpayOrder } = require('../services/razorpayService');
 const { writeLog } = require('../services/auditService');
 const { requireAuth, optionalAuth } = require('../middleware/requireAuth');
@@ -48,22 +48,81 @@ router.get('/', requireAuth, async (req, res) => {
   }
 });
 
-// 4. Buyer confirmed payment — re-validate through gate, create Razorpay order & associate with user
+// 4. Buyer confirmed payment — validate genuine DB prices & enforce bounded financial autonomy policy
 router.post('/confirm', requireAuth, async (req, res) => {
-  const { items, discountPercent, fullName, phone, shippingAddress } = req.body;
+  const {
+    items,
+    discountPercent,
+    fullName,
+    phone,
+    shippingAddress,
+    userConfirmed = false,
+    source = 'ai_agent',
+    isManualCheckout = false
+  } = req.body;
 
-  // Re-run the gate here too — never trust a total the frontend sends back to you
-  const gateResult = reviewOrder({ items, discountPercent });
+  // 1. Never trust amount from AI or frontend — calculate actual amount from backend DB
+  const cartCalc = await validateAndCalculateCart(items, discountPercent);
 
-  await writeLog('order_confirm', 'Buyer confirmed payment, re-validating before Razorpay call', gateResult, req.userId);
-
-  if (!gateResult.approved) {
-    return res.status(400).json({ status: 'blocked', message: gateResult.reason });
+  if (cartCalc.verifiedItems.length === 0) {
+    return res.status(400).json({ status: 'blocked', message: 'Cart contains no valid items' });
   }
 
+  // 2. Evaluate Bounded Financial Autonomy Policy
+  const effectiveSource = isManualCheckout ? 'user' : source;
+  const policyDecision = evaluateTransaction(cartCalc.discountedTotal, {
+    source: effectiveSource,
+    userConfirmed: Boolean(userConfirmed),
+    isManualCheckout: Boolean(isManualCheckout)
+  });
+
+  // 3. Record structured audit log event
+  const auditAction = userConfirmed ? 'CHECKOUT_CONFIRMED' : 'CHECKOUT_REQUEST';
+  await writeLog(
+    auditAction,
+    policyDecision.reason,
+    {
+      action: policyDecision.action,
+      allowed: policyDecision.allowed,
+      requiresConfirmation: policyDecision.requiresConfirmation,
+      total: cartCalc.discountedTotal,
+      tier: policyDecision.tier,
+      userConfirmed: Boolean(userConfirmed)
+    },
+    req.userId,
+    {
+      cartTotal: cartCalc.discountedTotal,
+      policyDecision: policyDecision.action,
+      userConfirmed: Boolean(userConfirmed),
+      source: effectiveSource
+    }
+  );
+
+  // 4. Enforce Policy Gate decisions
+  // Tier 2: ₹50,001 – ₹1,00,000 requires explicit buyer confirmation
+  if (policyDecision.action === 'REQUIRE_CONFIRMATION') {
+    return res.status(400).json({
+      status: 'requires_confirmation',
+      policy: 'REQUIRE_CONFIRMATION',
+      total: cartCalc.discountedTotal,
+      message: `Your cart total is ₹${cartCalc.discountedTotal.toLocaleString('en-IN')}. This amount requires your explicit confirmation before proceeding.`
+    });
+  }
+
+  // Tier 3: Above ₹1,00,000 for AI agent requires manual checkout by user
+  if (policyDecision.action === 'MANUAL_CHECKOUT') {
+    return res.status(403).json({
+      status: 'manual_checkout_required',
+      policy: 'MANUAL_CHECKOUT',
+      total: cartCalc.discountedTotal,
+      message: `Cart total of ₹${cartCalc.discountedTotal.toLocaleString('en-IN')} exceeds the AI agent autonomous limit (₹1,00,000). Please review and checkout manually via the Cart.`
+    });
+  }
+
+  // Allowed transactions (AUTO_CHECKOUT, CONFIRMED_CHECKOUT, or MANUAL_USER_APPROVED)
   try {
     const user = await User.findById(req.userId);
-    const razorpayOrder = await createRazorpayOrder(gateResult.total, `rcpt_${Date.now().toString().slice(-8)}`);
+    const razorpayOrder = await createRazorpayOrder(cartCalc.discountedTotal, `rcpt_${Date.now().toString().slice(-8)}`);
 
     const finalFullName = fullName?.trim() || user?.name || 'Valued Customer';
     const finalPhone = phone?.trim() || user?.phone || '+91 98765 43210';
@@ -81,13 +140,18 @@ router.post('/confirm', requireAuth, async (req, res) => {
       fullName: finalFullName,
       phone: finalPhone,
       shippingAddress: finalAddress,
-      items,
-      total: gateResult.total,
+      items: cartCalc.verifiedItems,
+      total: cartCalc.discountedTotal,
       status: 'created',
       razorpayOrderId: razorpayOrder.id
     });
 
-    await writeLog('razorpay_order_created', `Order ${order._id} created in Razorpay for ${user?.email || 'user'} (Deliver to: ${finalFullName}, ${finalAddress.city})`, { razorpayOrderId: razorpayOrder.id, total: gateResult.total }, req.userId);
+    await writeLog('razorpay_order_created', `Order ${order._id} created in Razorpay [policy:${policyDecision.action}] (Total: ₹${cartCalc.discountedTotal})`, { razorpayOrderId: razorpayOrder.id, total: cartCalc.discountedTotal }, req.userId, {
+      cartTotal: cartCalc.discountedTotal,
+      policyDecision: policyDecision.action,
+      userConfirmed: Boolean(userConfirmed),
+      source: effectiveSource
+    });
 
     res.json({
       orderId: order._id,
@@ -95,6 +159,8 @@ router.post('/confirm', requireAuth, async (req, res) => {
       amount: razorpayOrder.amount,
       currency: razorpayOrder.currency,
       keyId: process.env.RAZORPAY_KEY_ID,
+      policyAction: policyDecision.action,
+      total: cartCalc.discountedTotal,
       fullName: finalFullName,
       phone: finalPhone,
       shippingAddress: finalAddress

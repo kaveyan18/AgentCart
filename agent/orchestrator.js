@@ -44,6 +44,12 @@ function sanitizeHistory(history) {
  * Executes a single agentic session with Groq tool calling loop.
  */
 async function executeAgentTurn(sanitizedHistory, userMessage, context = {}) {
+  const isAffirmative = /^(yes|confirm|proceed|continue|proceed to checkout|continue to checkout|yes please|confirm order|approve)$/i.test((userMessage || '').trim());
+  const effectiveContext = {
+    ...context,
+    userConfirmed: Boolean(context.userConfirmed || isAffirmative)
+  };
+
   const messages = [
     { role: 'system', content: systemPrompt },
     ...sanitizedHistory,
@@ -111,13 +117,15 @@ async function executeAgentTurn(sanitizedHistory, userMessage, context = {}) {
         args = {};
       }
 
-      const result = await fn(args, context);
+      const result = await fn(args, effectiveContext);
 
-      if (call.function.name === 'propose_order' && result && result.status === 'pending_confirmation') {
+      if (call.function.name === 'propose_order' && result) {
         proposedOrder = {
-          items: args.items,
+          items: result.items || args.items,
           total: result.total,
-          status: result.status
+          status: result.status,
+          policy: result.policy,
+          message: result.message
         };
       }
 

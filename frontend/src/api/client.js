@@ -123,7 +123,10 @@ export async function createOrder(items, discountPercent = 0, deliveryInfo = {})
       discountPercent,
       fullName: deliveryInfo.fullName,
       phone: deliveryInfo.phone,
-      shippingAddress: deliveryInfo.shippingAddress
+      shippingAddress: deliveryInfo.shippingAddress,
+      userConfirmed: deliveryInfo.userConfirmed,
+      isManualCheckout: deliveryInfo.isManualCheckout,
+      source: deliveryInfo.source || (deliveryInfo.isManualCheckout ? 'user' : 'ai_agent')
     })
   });
 }

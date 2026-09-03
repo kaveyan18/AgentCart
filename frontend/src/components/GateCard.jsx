@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ShieldCheck, Lock, Check, MapPin, Phone, User, Edit3, ChevronDown, ChevronUp, ShoppingCart, ArrowRight } from 'lucide-react';
+import { ShieldCheck, Lock, Check, MapPin, Phone, User, Edit3, ChevronDown, ChevronUp, ShoppingCart, ArrowRight, AlertTriangle, Info } from 'lucide-react';
 import { formatPrice } from '../utils/helpers';
 import { useAuth } from '../context/AuthContext';
 
@@ -19,8 +19,14 @@ export default function GateCard({ items = [], total, onConfirm, isProcessing })
     country: 'India'
   });
 
-  const handleConfirmClick = () => {
+  // Determine Policy Tier
+  const isTier1 = displayTotal <= 50000;
+  const isTier2 = displayTotal > 50000 && displayTotal <= 100000;
+  const isTier3 = displayTotal > 100000;
+
+  const handleConfirmClick = (confirmed = false) => {
     onConfirm({
+      userConfirmed: confirmed,
       fullName: delivery.fullName,
       phone: delivery.phone,
       shippingAddress: {
@@ -36,11 +42,39 @@ export default function GateCard({ items = [], total, onConfirm, isProcessing })
   return (
     <div style={styles.card}>
       <div style={styles.header}>
-        <div style={styles.gateBadge}>
-          <ShieldCheck size={14} color="#3A6B45" />
-          <span>Policy Gate Approved (Max ₹1,00,000)</span>
-        </div>
+        {isTier1 && (
+          <div style={{ ...styles.gateBadge, background: '#dcfce7', borderColor: '#bbf7d0', color: '#16a34a' }}>
+            <Check size={14} color="#16a34a" />
+            <span>✓ Agent can proceed with checkout</span>
+          </div>
+        )}
+
+        {isTier2 && (
+          <div style={{ ...styles.gateBadge, background: '#fef9c3', borderColor: '#fef08a', color: '#854d0e' }}>
+            <AlertTriangle size={14} color="#ca8a04" />
+            <span>⚠ Confirmation Required</span>
+          </div>
+        )}
+
+        {isTier3 && (
+          <div style={{ ...styles.gateBadge, background: '#e0f2fe', borderColor: '#bae6fd', color: '#0369a1' }}>
+            <Info size={14} color="#0284c7" />
+            <span>ℹ Manual Checkout Required</span>
+          </div>
+        )}
       </div>
+
+      {isTier2 && (
+        <div style={styles.tierNoteWarning}>
+          This transaction of {formatPrice(displayTotal)} requires your explicit confirmation before proceeding.
+        </div>
+      )}
+
+      {isTier3 && (
+        <div style={styles.tierNoteInfo}>
+          This exceeds the agent's ₹1,00,000 autonomous limit. All items have been saved to your Cart. Please continue checkout manually.
+        </div>
+      )}
 
       {/* Items Summary */}
       <div style={styles.itemsList}>
@@ -135,19 +169,45 @@ export default function GateCard({ items = [], total, onConfirm, isProcessing })
         )}
       </div>
 
-      {/* Review in Cart & Checkout Button */}
-      <button
-        style={styles.confirmBtn}
-        onClick={handleConfirmClick}
-        disabled={isProcessing}
-      >
-        <ShoppingCart size={15} color="#fff" />
-        <span>Review in Cart & Checkout • {formatPrice(displayTotal)}</span>
-        <ArrowRight size={14} color="#fff" />
-      </button>
+      {/* Action Buttons per Policy Tier */}
+      {isTier1 && (
+        <button
+          style={{ ...styles.confirmBtn, background: 'linear-gradient(135deg, var(--sage), #2e5937)' }}
+          onClick={() => handleConfirmClick(false)}
+          disabled={isProcessing}
+        >
+          <ShoppingCart size={15} color="#fff" />
+          <span>Review in Cart & Checkout • {formatPrice(displayTotal)}</span>
+          <ArrowRight size={14} color="#fff" />
+        </button>
+      )}
+
+      {isTier2 && (
+        <button
+          style={{ ...styles.confirmBtn, background: 'linear-gradient(135deg, var(--mustard), #b45309)' }}
+          onClick={() => handleConfirmClick(true)}
+          disabled={isProcessing}
+        >
+          <Check size={15} color="#fff" />
+          <span>Confirm & Continue • {formatPrice(displayTotal)}</span>
+          <ArrowRight size={14} color="#fff" />
+        </button>
+      )}
+
+      {isTier3 && (
+        <button
+          style={{ ...styles.confirmBtn, background: 'linear-gradient(135deg, #0284c7, #0369a1)' }}
+          onClick={() => handleConfirmClick(false)}
+          disabled={isProcessing}
+        >
+          <ShoppingCart size={15} color="#fff" />
+          <span>Review Cart & Checkout Manually • {formatPrice(displayTotal)}</span>
+          <ArrowRight size={14} color="#fff" />
+        </button>
+      )}
 
       <div style={styles.securityNote}>
-        Every order is validated via policy gate and reviewed in your Cart
+        Every transaction adheres to the bounded financial autonomy policy
       </div>
     </div>
   );
@@ -178,7 +238,28 @@ const styles = {
     fontSize: '11px',
     fontWeight: '700',
     padding: '4px 10px',
-    borderRadius: '20px'
+    borderRadius: '12px',
+    border: '1px solid rgba(143, 175, 151, 0.4)'
+  },
+  tierNoteWarning: {
+    fontSize: '12px',
+    color: '#854d0e',
+    background: '#fef9c3',
+    border: '1px solid #fef08a',
+    borderRadius: '10px',
+    padding: '8px 12px',
+    marginBottom: '10px',
+    lineHeight: '1.4'
+  },
+  tierNoteInfo: {
+    fontSize: '12px',
+    color: '#0369a1',
+    background: '#e0f2fe',
+    border: '1px solid #bae6fd',
+    borderRadius: '10px',
+    padding: '8px 12px',
+    marginBottom: '10px',
+    lineHeight: '1.4'
   },
   itemsList: {
     display: 'flex',

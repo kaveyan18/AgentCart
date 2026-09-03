@@ -45,15 +45,10 @@ export default function Cart() {
     country: 'India'
   });
 
-  const isOverPolicyLimit = cartTotal > 100000;
+  const isOverAiAutonomousLimit = cartTotal > 100000;
 
   const handleProceedToCheckout = async () => {
     if (cartItems.length === 0) return;
-
-    if (isOverPolicyLimit) {
-      setCheckoutError('Order total exceeds the ₹1,00,000 policy gate limit. Please reduce item quantities.');
-      return;
-    }
 
     setCheckoutError(null);
     setIsProcessing(true);
@@ -61,6 +56,8 @@ export default function Cart() {
     const deliveryInfo = {
       fullName: delivery.fullName,
       phone: delivery.phone,
+      isManualCheckout: true,
+      source: 'user',
       shippingAddress: {
         street: delivery.street,
         city: delivery.city,
@@ -246,19 +243,21 @@ export default function Cart() {
             <div style={styles.summaryCard}>
               <h2 style={styles.summaryTitle}>Order Summary</h2>
 
-              {/* Policy Gate Check Pill */}
+              {/* Policy Autonomy Indicator */}
               <div
                 style={{
                   ...styles.policyBadge,
-                  background: isOverPolicyLimit ? 'var(--coral-bg)' : 'var(--sage-bg)',
-                  borderColor: isOverPolicyLimit ? 'var(--coral)' : 'var(--sage)'
+                  background: cartTotal <= 50000 ? '#dcfce7' : cartTotal <= 100000 ? '#fef9c3' : '#e0f2fe',
+                  borderColor: cartTotal <= 50000 ? '#bbf7d0' : cartTotal <= 100000 ? '#fef08a' : '#bae6fd'
                 }}
               >
-                <ShieldCheck size={16} color={isOverPolicyLimit ? 'var(--coral)' : 'var(--sage)'} />
-                <span style={{ color: isOverPolicyLimit ? 'var(--coral-dark)' : 'var(--sage)' }}>
-                  {isOverPolicyLimit
-                    ? 'Exceeds ₹1,00,000 policy limit'
-                    : 'Policy Gate Approved (≤ ₹1,00,000)'}
+                <ShieldCheck size={16} color={cartTotal <= 50000 ? '#16a34a' : cartTotal <= 100000 ? '#ca8a04' : '#0284c7'} />
+                <span style={{ color: cartTotal <= 50000 ? '#15803d' : cartTotal <= 100000 ? '#854d0e' : '#0369a1' }}>
+                  {cartTotal <= 50000
+                    ? 'Tier 1: Autonomous checkout eligible (≤ ₹50,000)'
+                    : cartTotal <= 100000
+                    ? 'Tier 2: Confirmation tier (₹50,001 – ₹1,00,000)'
+                    : 'Tier 3: Manual Direct Checkout Active (> ₹1,00,000)'}
                 </span>
               </div>
 
