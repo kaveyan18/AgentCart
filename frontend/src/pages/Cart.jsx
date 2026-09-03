@@ -373,7 +373,7 @@ export default function Cart() {
                 type="button"
                 className="btn btn-primary"
                 style={styles.checkoutBtn}
-                disabled={isProcessing || isOverPolicyLimit}
+                disabled={isProcessing}
                 onClick={handleProceedToCheckout}
               >
                 <CreditCard size={18} />
