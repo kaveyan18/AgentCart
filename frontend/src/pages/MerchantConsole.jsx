@@ -24,15 +24,16 @@ import {
   Bot,
   Sparkles,
   MapPin,
-  Phone
+  Phone,
+  RefreshCw
 } from 'lucide-react';
-import { getAuditLogs, getAllOrdersForAdmin, getProducts, createProduct, updateProduct, deleteProduct } from '../api/client';
+import { getAuditLogs, getAllOrdersForAdmin, getProducts, createProduct, updateProduct, deleteProduct, getMerchantInsights } from '../api/client';
 import { formatPrice, formatTime, formatDate } from '../utils/helpers';
 import { useAuth } from '../context/AuthContext';
 
 export default function MerchantConsole() {
   const { user, logout } = useAuth();
-  const [activeTab, setActiveTab] = useState('catalog'); // 'catalog' | 'audit' | 'orders'
+  const [activeTab, setActiveTab] = useState('catalog'); // 'catalog' | 'audit' | 'orders' | 'insights'
 
   // Data states
   const [logs, setLogs] = useState([]);
@@ -40,6 +41,11 @@ export default function MerchantConsole() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Growth Insights state
+  const [insightsData, setInsightsData] = useState(null);
+  const [insightsLoading, setInsightsLoading] = useState(false);
+  const [insightsError, setInsightsError] = useState(null);
 
   // Modal / Form state
   const [showProductModal, setShowProductModal] = useState(false);
@@ -77,6 +83,21 @@ export default function MerchantConsole() {
   useEffect(() => {
     fetchData();
   }, []);
+
+  // On-demand Growth Insights loader (manual trigger to save tokens)
+  const handleFetchInsights = async () => {
+    try {
+      setInsightsLoading(true);
+      setInsightsError(null);
+      const data = await getMerchantInsights();
+      setInsightsData(data);
+    } catch (err) {
+      console.error('Failed to load growth insights:', err);
+      setInsightsError(err.message || 'Failed to generate growth insights');
+    } finally {
+      setInsightsLoading(false);
+    }
+  };
 
   // Modal Handlers
   const handleOpenAddModal = () => {
@@ -352,6 +373,18 @@ export default function MerchantConsole() {
           >
             <CreditCard size={16} />
             <span>Store Orders ({orders.length})</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('insights')}
+            style={{
+              ...styles.tabBtn,
+              background: activeTab === 'insights' ? 'var(--coral)' : 'var(--white)',
+              color: activeTab === 'insights' ? '#fff' : 'var(--ink)'
+            }}
+          >
+            <Sparkles size={16} />
+            <span>Growth Insights (AI Advisor)</span>
           </button>
         </div>
 
@@ -667,6 +700,346 @@ export default function MerchantConsole() {
                 })}
               </tbody>
             </table>
+          )}
+        </div>
+      )}
+
+      {/* ── TAB 4: GROWTH INSIGHTS (AI ADVISOR) ────────────────────────────── */}
+      {activeTab === 'insights' && (
+        <div style={styles.panel}>
+          <div style={styles.panelHeader}>
+            <div style={styles.panelTitleRow}>
+              <Sparkles size={20} color="var(--coral)" />
+              <div>
+                <h2 style={styles.panelTitle}>Merchant Growth Insights & Strategic Advisory</h2>
+                <div style={{ fontSize: '12.5px', color: 'var(--slate)', marginTop: '2px' }}>
+                  Deterministic Mongoose aggregations paired with plain-language merchandising recommendations powered by Groq.
+                </div>
+              </div>
+            </div>
+
+            <button
+              onClick={handleFetchInsights}
+              disabled={insightsLoading}
+              style={{
+                ...styles.addBtn,
+                background: 'linear-gradient(135deg, var(--coral), var(--coral-dark))',
+                cursor: insightsLoading ? 'wait' : 'pointer'
+              }}
+            >
+              <RefreshCw size={15} className={insightsLoading ? 'spin' : ''} />
+              <span>{insightsLoading ? 'Analyzing Data...' : insightsData ? 'Refresh Insights' : 'Generate Growth Insights'}</span>
+            </button>
+          </div>
+
+          {/* 1. Initial State: No insights yet requested */}
+          {!insightsData && !insightsLoading && !insightsError && (
+            <div style={{ ...styles.emptySearchCard, padding: '48px 24px', textAlign: 'center' }}>
+              <div style={{ ...styles.emptyIconCircle, background: 'var(--coral-bg)', margin: '0 auto 16px' }}>
+                <Bot size={34} color="var(--coral)" />
+              </div>
+              <h3 style={{ fontSize: '18px', fontWeight: '700', color: 'var(--ink)', marginBottom: '8px' }}>
+                On-Demand Growth & Inventory Intelligence
+              </h3>
+              <p style={{ maxWidth: '560px', margin: '0 auto 20px', color: 'var(--slate)', fontSize: '13.5px', lineHeight: '1.6' }}>
+                To conserve token consumption, growth insights are generated on-demand. When triggered, real database metrics
+                (revenue, AOV, multi-item upsells, failure rates) are pre-calculated and interpreted by your executive AI advisor.
+              </p>
+              <button
+                onClick={handleFetchInsights}
+                style={{
+                  ...styles.addBtn,
+                  background: 'var(--coral)',
+                  padding: '12px 24px',
+                  fontSize: '14px',
+                  margin: '0 auto'
+                }}
+              >
+                <Sparkles size={16} />
+                <span>Generate Growth Insights</span>
+              </button>
+            </div>
+          )}
+
+          {/* 2. Loading State */}
+          {insightsLoading && (
+            <div style={{ padding: '60px 20px', textAlign: 'center' }}>
+              <div className="spinner" style={{ margin: '0 auto 16px' }} />
+              <h4 style={{ fontSize: '16px', fontWeight: '600', color: 'var(--ink)', marginBottom: '6px' }}>
+                Running Database Aggregations...
+              </h4>
+              <p style={{ fontSize: '13px', color: 'var(--slate)' }}>
+                Executing zero-trust Mongoose queries on orders and consulting the Merchant Growth Advisor via Groq.
+              </p>
+            </div>
+          )}
+
+          {/* 3. Error State */}
+          {insightsError && !insightsLoading && (
+            <div style={{ ...styles.errorBanner, margin: '20px', padding: '16px' }}>
+              <ShieldAlert size={20} />
+              <div style={{ flex: 1 }}>
+                <div style={{ fontWeight: '700', marginBottom: '4px' }}>Could not load growth insights</div>
+                <div style={{ fontSize: '12.5px' }}>{insightsError}</div>
+              </div>
+              <button onClick={handleFetchInsights} className="btn btn-secondary" style={{ padding: '6px 12px', fontSize: '12px' }}>
+                Retry
+              </button>
+            </div>
+          )}
+
+          {/* 4. Not Enough Data State */}
+          {insightsData && !insightsLoading && insightsData.notEnoughData && (
+            <div style={{ ...styles.emptySearchCard, padding: '40px 24px', textAlign: 'center' }}>
+              <div style={{ ...styles.emptyIconCircle, background: 'var(--mustard-bg)', margin: '0 auto 16px' }}>
+                <TrendingUp size={32} color="var(--mustard)" />
+              </div>
+              <h3 style={{ fontSize: '17px', fontWeight: '700', color: 'var(--ink)', marginBottom: '8px' }}>
+                Insufficient Order Data for Growth Analysis
+              </h3>
+              <p style={{ maxWidth: '520px', margin: '0 auto', color: 'var(--slate)', fontSize: '13px', lineHeight: '1.5' }}>
+                {insightsData.reason || 'At least 3 paid orders are required to generate statistically meaningful growth insights.'}
+              </p>
+            </div>
+          )}
+
+          {/* 5. Complete Growth Insights Content */}
+          {insightsData && !insightsLoading && !insightsData.notEnoughData && (
+            <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+              
+              {/* Part A: Pre-computed Real Store Metrics */}
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
+                  <div style={{ fontSize: '14px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.04em', color: 'var(--ink)' }}>
+                    📊 Verified Store Performance Metrics (Mongoose Aggregation)
+                  </div>
+                  <span style={{ fontSize: '11.5px', color: 'var(--slate)', background: 'var(--cream)', padding: '4px 10px', borderRadius: '8px' }}>
+                    Zero-Trust Pre-Computed
+                  </span>
+                </div>
+
+                <div style={styles.kpiGrid}>
+                  {/* Card 1: Total Revenue */}
+                  <div style={styles.kpiCard}>
+                    <div style={styles.kpiTop}>
+                      <span style={styles.kpiLabel}>Total Paid Revenue</span>
+                      <div style={{ ...styles.kpiIconWrap, background: 'var(--coral-bg)' }}>
+                        <Tag size={15} color="var(--coral)" />
+                      </div>
+                    </div>
+                    <div style={styles.kpiVal}>{formatPrice(insightsData.metrics.revenue.totalRevenue)}</div>
+                    <div style={styles.kpiSub}>From {insightsData.metrics.revenue.paidOrdersCount} completed orders</div>
+                  </div>
+
+                  {/* Card 2: Average Order Value */}
+                  <div style={styles.kpiCard}>
+                    <div style={styles.kpiTop}>
+                      <span style={styles.kpiLabel}>Average Order Value</span>
+                      <div style={{ ...styles.kpiIconWrap, background: 'var(--sage-bg)' }}>
+                        <TrendingUp size={15} color="var(--sage)" />
+                      </div>
+                    </div>
+                    <div style={styles.kpiVal}>{formatPrice(insightsData.metrics.revenue.avgOrderValue)}</div>
+                    <div style={styles.kpiSub}>Average net cart value per buyer</div>
+                  </div>
+
+                  {/* Card 3: Multi-Item Orders (Upsell Effectiveness) */}
+                  <div style={styles.kpiCard}>
+                    <div style={styles.kpiTop}>
+                      <span style={styles.kpiLabel}>Multi-Item Order Rate</span>
+                      <div style={{ ...styles.kpiIconWrap, background: 'var(--lavender-bg)' }}>
+                        <Package size={15} color="var(--purple)" />
+                      </div>
+                    </div>
+                    <div style={styles.kpiVal}>{insightsData.metrics.upsellPerformance.multiItemRatePercent}%</div>
+                    <div style={styles.kpiSub}>
+                      {insightsData.metrics.upsellPerformance.multiItemOrdersCount} of {insightsData.metrics.upsellPerformance.paidOrdersCount} orders had &gt;1 item (Upsell proxy)
+                    </div>
+                  </div>
+
+                  {/* Card 4: Payment Failure Rate */}
+                  <div style={styles.kpiCard}>
+                    <div style={styles.kpiTop}>
+                      <span style={styles.kpiLabel}>Payment Failure Rate</span>
+                      <div style={{ ...styles.kpiIconWrap, background: 'var(--pink-bg)' }}>
+                        <ShieldAlert size={15} color="var(--rust)" />
+                      </div>
+                    </div>
+                    <div style={styles.kpiVal}>{insightsData.metrics.paymentHealth.paymentFailureRatePercent}%</div>
+                    <div style={styles.kpiSub}>
+                      {insightsData.metrics.paymentHealth.failedOrdersCount} failed out of {insightsData.metrics.paymentHealth.totalAttemptedOrders} total attempts
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Part B: Product Merchandising Breakdown */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: '20px' }}>
+                {/* Top 5 Revenue Drivers */}
+                <div style={{ background: 'var(--cream)', borderRadius: '16px', padding: '18px', border: '1px solid var(--border)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+                    <CheckCircle2 size={16} color="var(--sage)" />
+                    <h3 style={{ fontSize: '13.5px', fontWeight: '700', color: 'var(--ink)', margin: 0 }}>
+                      Top Products by Revenue
+                    </h3>
+                  </div>
+
+                  <table style={styles.table}>
+                    <thead>
+                      <tr>
+                        <th style={styles.th}>Product Name</th>
+                        <th style={{ ...styles.th, textAlign: 'center' }}>Units</th>
+                        <th style={{ ...styles.th, textAlign: 'right' }}>Revenue</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {insightsData.metrics.topSellers.map((item, idx) => (
+                        <tr key={idx} style={styles.tr}>
+                          <td style={{ ...styles.td, fontWeight: '600', color: 'var(--ink)' }}>
+                            <span style={{ color: 'var(--coral)', marginRight: '6px' }}>#{idx + 1}</span>
+                            {item.name}
+                          </td>
+                          <td style={{ ...styles.td, textAlign: 'center' }}>{item.unitsSold}</td>
+                          <td style={{ ...styles.td, textAlign: 'right', fontWeight: '700', color: 'var(--ink)' }}>
+                            {formatPrice(item.revenue)}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Bottom Revenue Drivers (>= 1 Sale) */}
+                <div style={{ background: 'var(--cream)', borderRadius: '16px', padding: '18px', border: '1px solid var(--border)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+                    <SlidersHorizontal size={16} color="var(--mustard)" />
+                    <h3 style={{ fontSize: '13.5px', fontWeight: '700', color: 'var(--ink)', margin: 0 }}>
+                      Bottom Revenue Items (≥1 Sale)
+                    </h3>
+                  </div>
+
+                  <table style={styles.table}>
+                    <thead>
+                      <tr>
+                        <th style={styles.th}>Product Name</th>
+                        <th style={{ ...styles.th, textAlign: 'center' }}>Units</th>
+                        <th style={{ ...styles.th, textAlign: 'right' }}>Revenue</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {insightsData.metrics.bottomSellers.map((item, idx) => (
+                        <tr key={idx} style={styles.tr}>
+                          <td style={{ ...styles.td, fontWeight: '600', color: 'var(--ink)' }}>
+                            {item.name}
+                          </td>
+                          <td style={{ ...styles.td, textAlign: 'center' }}>{item.unitsSold}</td>
+                          <td style={{ ...styles.td, textAlign: 'right', fontWeight: '700', color: 'var(--ink)' }}>
+                            {formatPrice(item.revenue)}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* Zero Sales Inventory Alert */}
+              {insightsData.metrics.zeroSalesCount > 0 && (
+                <div style={{ background: 'var(--white)', borderRadius: '12px', padding: '12px 16px', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <Package size={16} color="var(--slate)" />
+                    <span style={{ fontSize: '13px', color: 'var(--ink)' }}>
+                      <strong>{insightsData.metrics.zeroSalesCount} catalog items</strong> have recorded zero sales to date.
+                    </span>
+                  </div>
+                  <button onClick={() => setActiveTab('catalog')} className="btn btn-secondary" style={{ padding: '5px 12px', fontSize: '12px' }}>
+                    Review Inventory
+                  </button>
+                </div>
+              )}
+
+              {/* Part C: AI Growth Advisor Recommendations */}
+              <div style={{
+                background: 'linear-gradient(135deg, #fdfbf7 0%, #ffffff 100%)',
+                borderRadius: '20px',
+                padding: '24px',
+                border: '1.5px solid rgba(240, 101, 74, 0.25)',
+                boxShadow: '0 8px 30px rgba(58, 63, 82, 0.05)'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '18px', flexWrap: 'wrap', gap: '10px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <div style={{
+                      width: '40px',
+                      height: '40px',
+                      borderRadius: '12px',
+                      background: 'linear-gradient(135deg, var(--coral), var(--coral-dark))',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      boxShadow: '0 4px 12px rgba(240, 101, 74, 0.3)'
+                    }}>
+                      <Bot size={22} color="#fff" />
+                    </div>
+                    <div>
+                      <h3 style={{ fontSize: '16px', fontWeight: '700', color: 'var(--ink)', margin: 0 }}>
+                        Executive Growth Advisor Recommendations
+                      </h3>
+                      <div style={{ fontSize: '12px', color: 'var(--slate)', marginTop: '2px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <span style={{ display: 'inline-block', width: '6px', height: '6px', borderRadius: '50%', background: 'var(--sage)' }} />
+                        Grounded in real store data · Generated {formatDate(insightsData.generatedAt)} at {formatTime(insightsData.generatedAt)}
+                      </div>
+                    </div>
+                  </div>
+
+                  <span style={{
+                    fontSize: '11px',
+                    fontWeight: '700',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.04em',
+                    padding: '4px 10px',
+                    borderRadius: '12px',
+                    background: 'var(--sage-bg)',
+                    color: '#3A6B45',
+                    border: '1px solid rgba(143, 175, 151, 0.4)'
+                  }}>
+                    Advisory Only
+                  </span>
+                </div>
+
+                {/* Narrative text display */}
+                <div style={{
+                  fontSize: '13.5px',
+                  lineHeight: '1.7',
+                  color: 'var(--ink)',
+                  whiteSpace: 'pre-line',
+                  background: 'var(--white)',
+                  padding: '20px',
+                  borderRadius: '14px',
+                  border: '1px solid var(--border)'
+                }}>
+                  {insightsData.insights}
+                </div>
+
+                {/* Trust & Safety Policy Notice */}
+                <div style={{
+                  marginTop: '16px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  fontSize: '11.5px',
+                  color: 'var(--slate)',
+                  background: 'var(--cream)',
+                  padding: '8px 12px',
+                  borderRadius: '8px'
+                }}>
+                  <ShieldCheck size={14} color="var(--sage)" style={{ flexShrink: 0 }} />
+                  <span>
+                    <strong>Zero-Trust Safeguard:</strong> This advisor produces narrative strategy only. It cannot alter database prices, discount caps, or products. Use the <strong>Product Catalog</strong> tab to manually execute recommended adjustments.
+                  </span>
+                </div>
+              </div>
+
+            </div>
           )}
         </div>
       )}

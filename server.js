@@ -10,6 +10,7 @@ const chatRoutes = require('./routes/chat');
 const webhookRoutes = require('./routes/webhook');
 const authRoutes = require('./routes/auth');
 const cartRoutes = require('./routes/cart');
+const merchantRoutes = require('./routes/merchant');
 const AuditLog = require('./models/AuditLog');
 
 const app = express();
@@ -49,6 +50,7 @@ app.use(['/api/products', '/products'], productRoutes);
 app.use(['/api/cart', '/cart'], cartRoutes);
 app.use(['/api/orders', '/orders'], orderRoutes);
 app.use(['/api/chat', '/chat'], chatRoutes);
+app.use(['/api/merchant', '/merchant'], merchantRoutes);
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

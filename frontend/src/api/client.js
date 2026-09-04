@@ -166,9 +166,13 @@ export async function getOrderStatus(id) {
   return request(`/orders/${id}/status`);
 }
 
-// ── 6. Merchant Console Audit Logs ───────────────────────────────────────────
+// ── 6. Merchant Console Audit Logs & AI Growth Insights ───────────────────────
 export async function getAuditLogs() {
   return request('/orders/audit');
+}
+
+export async function getMerchantInsights() {
+  return request('/merchant/insights');
 }
 
 // ── 7. Server-Authoritative Cross-Device Cart API ────────────────────────────
