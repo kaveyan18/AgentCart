@@ -42,14 +42,13 @@ app.use('/api/webhook', webhookRoutes);
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// 4. API Routes & Machine-readable Agent Manifest
-app.use('/api/auth', authRoutes);
-app.get('/api/catalog.json', (req, res, next) => { req.url = '/catalog.json'; productRoutes(req, res, next); });
-app.get('/catalog.json', (req, res, next) => { req.url = '/catalog.json'; productRoutes(req, res, next); });
-app.use('/api/products', productRoutes);
-app.use('/api/cart', cartRoutes);
-app.use('/api/orders', orderRoutes);
-app.use('/api/chat', chatRoutes);
+// 4. API Routes & Machine-readable Agent Manifest (handles both /api/* and /*)
+app.use(['/api/auth', '/auth'], authRoutes);
+app.get(['/api/catalog.json', '/catalog.json'], (req, res, next) => { req.url = '/catalog.json'; productRoutes(req, res, next); });
+app.use(['/api/products', '/products'], productRoutes);
+app.use(['/api/cart', '/cart'], cartRoutes);
+app.use(['/api/orders', '/orders'], orderRoutes);
+app.use(['/api/chat', '/chat'], chatRoutes);
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

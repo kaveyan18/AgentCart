@@ -1,4 +1,12 @@
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+function getBaseApiUrl() {
+  let url = (import.meta.env.VITE_API_URL || 'http://localhost:3000/api').trim().replace(/\/+$/, '');
+  if (!url.endsWith('/api')) {
+    url += '/api';
+  }
+  return url;
+}
+
+const API_URL = getBaseApiUrl();
 
 export function getStoredToken() {
   return localStorage.getItem('agentcart_token');
