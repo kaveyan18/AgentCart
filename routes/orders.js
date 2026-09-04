@@ -62,18 +62,20 @@ router.post('/confirm', requireAuth, async (req, res) => {
     isManualCheckout = false
   } = req.body;
 
-  // 1. Never trust cart array sent from frontend — read server-authoritative cart for req.userId
+  // 1. Never trust cart array sent from frontend — validate canonical DB prices
   let candidateItems = items;
-  const userCart = await Cart.findOne({ userId: req.userId });
-  if (userCart && Array.isArray(userCart.items) && userCart.items.length > 0) {
-    candidateItems = userCart.items.map(i => ({
-      productId: i.productId,
-      id: i.productId,
-      _id: i.productId,
-      name: i.name,
-      price: i.price,
-      qty: i.qty
-    }));
+  if (!candidateItems || !Array.isArray(candidateItems) || candidateItems.length === 0) {
+    const userCart = await Cart.findOne({ userId: req.userId });
+    if (userCart && Array.isArray(userCart.items) && userCart.items.length > 0) {
+      candidateItems = userCart.items.map(i => ({
+        productId: i.productId,
+        id: i.productId,
+        _id: i.productId,
+        name: i.name,
+        price: i.price,
+        qty: i.qty
+      }));
+    }
   }
 
   // Calculate actual amount from canonical backend DB records

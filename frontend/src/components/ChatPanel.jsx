@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Bot, Send, X, Sparkles, RotateCcw } from 'lucide-react';
+import { Bot, Send, X, Sparkles, RotateCcw, ShoppingBag, Zap } from 'lucide-react';
 import { useChat } from '../context/ChatContext';
 import { useCart } from '../context/CartContext';
 import GateCard from './GateCard';
 import UpsellCard from './UpsellCard';
+import SideCheckoutDrawer from './SideCheckoutDrawer';
 
 /* ── Lightweight Markdown → React renderer ───────────────────────────────── */
 function MarkdownText({ text, isAgent }) {
@@ -114,10 +115,14 @@ export default function ChatPanel() {
     resetChat
   } = useChat();
 
-  const { addToCart, addBundleToCart } = useCart();
+  const { cartItems, cartCount, cartTotal, addToCart, addBundleToCart, clearCart } = useCart();
 
   const [input, setInput] = useState('');
   const [isProcessingCheckout, setIsProcessingCheckout] = useState(false);
+  const [isCheckoutDrawerOpen, setIsCheckoutDrawerOpen] = useState(false);
+  const [drawerData, setDrawerData] = useState({ items: [], total: 0, deliveryInfo: null });
+  const [orderSuccessData, setOrderSuccessData] = useState(null);
+
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
   const navigate = useNavigate();
@@ -155,6 +160,56 @@ export default function ChatPanel() {
     sendMessage(text);
   };
 
+  const handleOpenCheckoutDrawer = ({ items, total, deliveryInfo }) => {
+    addBundleToCart(items);
+    setDrawerData({ items, total, deliveryInfo });
+    setOrderSuccessData(null);
+    setIsCheckoutDrawerOpen(true);
+  };
+
+  const handleToggleCartDrawer = () => {
+    if (isCheckoutDrawerOpen) {
+      setIsCheckoutDrawerOpen(false);
+    } else {
+      const lastProposal = [...messages].reverse().find(m => m.items && m.items.length > 0);
+      const itemsToUse = (lastProposal && lastProposal.items.length > 0)
+        ? lastProposal.items
+        : cartItems;
+      const totalToUse = (lastProposal && lastProposal.items.length > 0)
+        ? lastProposal.total
+        : cartTotal;
+
+      setDrawerData({
+        items: itemsToUse || [],
+        total: totalToUse || 0,
+        deliveryInfo: null
+      });
+      setOrderSuccessData(null);
+      setIsCheckoutDrawerOpen(true);
+    }
+  };
+
+  const handleDrawerPay = async (finalDeliveryInfo) => {
+    setIsProcessingCheckout(true);
+    try {
+      // In-chat direct checkout under 50,000 without moving to another page
+      await processCheckout(
+        drawerData.items,
+        null, // null navigate keeps buyer on the current page!
+        finalDeliveryInfo,
+        (successData) => {
+          clearCart();
+          setOrderSuccessData(successData);
+          setIsProcessingCheckout(false);
+        }
+      );
+    } catch (err) {
+      console.error('Drawer checkout error:', err);
+    } finally {
+      setIsProcessingCheckout(false);
+    }
+  };
+
   const handleCheckoutClick = (items, deliveryInfo) => {
     // Add proposed items into the cart and navigate to /cart
     addBundleToCart(items);
@@ -163,42 +218,77 @@ export default function ChatPanel() {
   };
 
   return (
-    <div style={styles.panel} role="dialog" aria-label="AgentCart Assistant">
-      {/* Head */}
-      <div style={styles.head}>
-        <div style={styles.headBrand}>
-          <div style={styles.avatar}>
-            <Bot size={18} color="#fff" />
-          </div>
-          <div>
-            <div style={styles.headTitle}>AgentCart AI Concierge</div>
-            <div style={styles.headStatus}>
-              <span style={styles.dot}></span> Groq LLaMA 3.3 · Policy Verified
+    <>
+      {/* ── Instant Checkout Side Drawer (Popup near chat itself, no page navigation) ── */}
+      <SideCheckoutDrawer
+        isOpen={isCheckoutDrawerOpen}
+        onClose={() => setIsCheckoutDrawerOpen(false)}
+        items={drawerData.items}
+        total={drawerData.total}
+        deliveryInfo={drawerData.deliveryInfo}
+        onUpdateDelivery={(info) => setDrawerData(d => ({ ...d, deliveryInfo: info }))}
+        onPay={handleDrawerPay}
+        isProcessing={isProcessingCheckout}
+        orderSuccess={orderSuccessData}
+        onResetSuccess={() => setOrderSuccessData(null)}
+      />
+
+      <div style={styles.panel} role="dialog" aria-label="AgentCart Assistant">
+        {/* Head */}
+        <div style={styles.head}>
+          <div style={styles.headBrand}>
+            <div style={styles.avatar}>
+              <Bot size={18} color="#fff" />
+            </div>
+            <div>
+              <div style={styles.headTitle}>AgentCart AI Concierge</div>
+              <div style={styles.headStatus}>
+                <span style={styles.dot}></span> Groq LLaMA 3.3 · Policy Verified
+              </div>
             </div>
           </div>
+          <div style={styles.headActions}>
+            <button
+              style={{
+                ...styles.actionBtn,
+                background: isCheckoutDrawerOpen ? 'rgba(240, 101, 74, 0.4)' : 'rgba(255, 255, 255, 0.1)',
+                position: 'relative'
+              }}
+              onClick={handleToggleCartDrawer}
+              title="Cart & Instant Checkout"
+              aria-label="View Cart"
+            >
+              <ShoppingBag size={15} />
+              {(cartCount > 0 || (drawerData.items && drawerData.items.length > 0)) && (
+                <span style={styles.badgeDot}></span>
+              )}
+            </button>
+            <button
+              style={styles.actionBtn}
+              onClick={() => {
+                resetChat();
+                setIsCheckoutDrawerOpen(false);
+                setOrderSuccessData(null);
+              }}
+              title="Start new conversation"
+              aria-label="New chat"
+            >
+              <RotateCcw size={15} />
+            </button>
+            <button
+              style={styles.actionBtn}
+              onClick={() => {
+                setIsCheckoutDrawerOpen(false);
+                if (typeof closeChat === 'function') closeChat();
+                else if (typeof toggleChat === 'function') toggleChat();
+              }}
+              aria-label="Close chat"
+              title="Close chat"
+            >
+              <X size={18} />
+            </button>
+          </div>
         </div>
-        <div style={styles.headActions}>
-          <button
-            style={styles.actionBtn}
-            onClick={resetChat}
-            title="Start new conversation"
-            aria-label="New chat"
-          >
-            <RotateCcw size={15} />
-          </button>
-          <button
-            style={styles.actionBtn}
-            onClick={() => {
-              if (typeof closeChat === 'function') closeChat();
-              else if (typeof toggleChat === 'function') toggleChat();
-            }}
-            aria-label="Close chat"
-            title="Close chat"
-          >
-            <X size={18} />
-          </button>
-        </div>
-      </div>
 
       {/* Body */}
       <div style={styles.body}>
@@ -230,6 +320,7 @@ export default function ChatPanel() {
                 items={m.items}
                 total={m.total}
                 onConfirm={(deliveryInfo) => handleCheckoutClick(m.items, deliveryInfo)}
+                onOpenCheckoutDrawer={handleOpenCheckoutDrawer}
                 isProcessing={isProcessingCheckout}
               />
             )}
@@ -288,6 +379,7 @@ export default function ChatPanel() {
         </div>
       </form>
     </div>
+  </>
   );
 }
 
@@ -498,5 +590,15 @@ const styles = {
     justifyContent: 'center',
     flexShrink: 0,
     boxShadow: '0 4px 12px rgba(240, 101, 74, 0.3)'
+  },
+  badgeDot: {
+    position: 'absolute',
+    top: '3px',
+    right: '3px',
+    width: '7px',
+    height: '7px',
+    borderRadius: '50%',
+    background: 'var(--coral)',
+    border: '1.5px solid var(--ink-2)'
   }
 };

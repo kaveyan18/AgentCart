@@ -158,10 +158,16 @@ export function ChatProvider({ children }) {
               razorpaySignature: response.razorpay_signature
             });
 
-            // Payment successfully verified -> invoke onSuccess callback to clear cart
+            // Payment successfully verified -> invoke onSuccess callback to clear cart and notify parent
             if (typeof onSuccess === 'function') {
               try {
-                onSuccess();
+                onSuccess({
+                  orderId: orderData.orderId,
+                  paymentId: response.razorpay_payment_id,
+                  razorpayOrderId: response.razorpay_order_id,
+                  items,
+                  total: items.reduce((s, i) => s + (i.price * (i.qty || 1)), 0)
+                });
               } catch (clearErr) {
                 console.warn('onSuccess callback error:', clearErr);
               }

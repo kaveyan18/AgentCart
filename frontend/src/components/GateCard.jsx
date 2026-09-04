@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { ShieldCheck, Lock, Check, MapPin, Phone, User, Edit3, ChevronDown, ChevronUp, ShoppingCart, ArrowRight, AlertTriangle, Info } from 'lucide-react';
+import { ShieldCheck, Lock, Check, MapPin, Phone, User, Edit3, ChevronDown, ChevronUp, ShoppingCart, ArrowRight, AlertTriangle, Info, Zap } from 'lucide-react';
 import { formatPrice } from '../utils/helpers';
 import { useAuth } from '../context/AuthContext';
 
-export default function GateCard({ items = [], total, onConfirm, isProcessing }) {
+export default function GateCard({ items = [], total, onConfirm, isProcessing, onOpenCheckoutDrawer }) {
   const { user } = useAuth();
   const displayTotal = total || items.reduce((s, i) => s + (i.price * (i.qty || 1)), 0);
 
@@ -171,27 +171,71 @@ export default function GateCard({ items = [], total, onConfirm, isProcessing })
 
       {/* Action Buttons per Policy Tier */}
       {isTier1 && (
-        <button
-          style={{ ...styles.confirmBtn, background: 'linear-gradient(135deg, var(--sage), #2e5937)' }}
-          onClick={() => handleConfirmClick(false)}
-          disabled={isProcessing}
-        >
-          <ShoppingCart size={15} color="#fff" />
-          <span>Review in Cart & Checkout • {formatPrice(displayTotal)}</span>
-          <ArrowRight size={14} color="#fff" />
-        </button>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%' }}>
+          <button
+            style={{ ...styles.confirmBtn, background: 'linear-gradient(135deg, var(--coral), var(--coral-dark))' }}
+            onClick={() => {
+              if (onOpenCheckoutDrawer) {
+                onOpenCheckoutDrawer({
+                  items,
+                  total: displayTotal,
+                  deliveryInfo: {
+                    fullName: delivery.fullName,
+                    phone: delivery.phone,
+                    shippingAddress: {
+                      street: delivery.street,
+                      city: delivery.city,
+                      state: delivery.state,
+                      postalCode: delivery.postalCode,
+                      country: delivery.country
+                    }
+                  }
+                });
+              } else {
+                handleConfirmClick(false);
+              }
+            }}
+            disabled={isProcessing}
+          >
+            <Zap size={15} color="#fff" />
+            <span>Instant Checkout & Pay • {formatPrice(displayTotal)}</span>
+            <ArrowRight size={14} color="#fff" />
+          </button>
+        </div>
       )}
 
       {isTier2 && (
-        <button
-          style={{ ...styles.confirmBtn, background: 'linear-gradient(135deg, var(--mustard), #b45309)' }}
-          onClick={() => handleConfirmClick(true)}
-          disabled={isProcessing}
-        >
-          <Check size={15} color="#fff" />
-          <span>Confirm & Continue • {formatPrice(displayTotal)}</span>
-          <ArrowRight size={14} color="#fff" />
-        </button>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%' }}>
+          <button
+            style={{ ...styles.confirmBtn, background: 'linear-gradient(135deg, var(--mustard), #b45309)' }}
+            onClick={() => {
+              if (onOpenCheckoutDrawer) {
+                onOpenCheckoutDrawer({
+                  items,
+                  total: displayTotal,
+                  deliveryInfo: {
+                    fullName: delivery.fullName,
+                    phone: delivery.phone,
+                    shippingAddress: {
+                      street: delivery.street,
+                      city: delivery.city,
+                      state: delivery.state,
+                      postalCode: delivery.postalCode,
+                      country: delivery.country
+                    }
+                  }
+                });
+              } else {
+                handleConfirmClick(true);
+              }
+            }}
+            disabled={isProcessing}
+          >
+            <Check size={15} color="#fff" />
+            <span>Confirm & Pay • {formatPrice(displayTotal)}</span>
+            <ArrowRight size={14} color="#fff" />
+          </button>
+        </div>
       )}
 
       {isTier3 && (
