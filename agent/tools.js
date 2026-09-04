@@ -161,7 +161,7 @@ const toolSchemas = [
     type: 'function',
     function: {
       name: 'propose_order',
-      description: 'Propose an order for policy review. Does NOT charge — only drafts and checks limits.',
+      description: 'Draft an order for policy review and checkout. ONLY call this when the buyer has confirmed their final item selection and wants to check out. NEVER call propose_order while still asking or proposing an upsell.',
       parameters: {
         type: 'object',
         properties: {

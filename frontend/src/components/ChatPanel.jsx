@@ -234,8 +234,8 @@ export default function ChatPanel() {
               />
             )}
 
-            {/* Upsell Card */}
-            {m.upsell && (
+            {/* Upsell Card (only if not already proposing final order) */}
+            {m.upsell && (!m.items || m.items.length === 0) && (
               <UpsellCard
                 name={m.upsell.name}
                 price={m.upsell.price}

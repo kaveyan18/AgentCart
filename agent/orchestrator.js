@@ -90,7 +90,7 @@ async function executeAgentTurn(sanitizedHistory, userMessage, context = {}) {
         reply: cleanReply,
         history: nextCleanHistory,
         proposedOrder,
-        upsell
+        upsell: proposedOrder ? null : upsell
       };
     }
 
@@ -149,7 +149,7 @@ async function executeAgentTurn(sanitizedHistory, userMessage, context = {}) {
       { role: 'assistant', content: "I found the details for your request!" }
     ].slice(-6),
     proposedOrder,
-    upsell
+    upsell: proposedOrder ? null : upsell
   };
 }
 
