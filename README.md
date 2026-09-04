@@ -14,6 +14,7 @@ AgentCart is an autonomous e-commerce storefront powered by Groq LLM function ca
   - **Tier 3 (> ₹1,00,000)**: Agent cannot autonomously buy; forces manual buyer review.
 - 💳 **Razorpay Payment Gateway**: Seamless test/live checkout flow with server-side signature verification and webhook listeners.
 - 🔒 **Merchant Console (`/admin`)**: RBAC-protected dashboard for catalog management, live AI audit trail, and transaction inspection.
+- 📈 **Zero-Trust Growth Insights Advisor**: Merchant-facing analytics dashboard that pre-aggregates revenue, AOV, top/bottom sellers, upsell rates, and payment health in MongoDB before consulting an executive LLM advisor for grounded merchandising recommendations.
 - 🛒 **Server-Authoritative Cart**: Cart isolation per user, coupon validation (max 10% discount policy ceiling), and anti-tamper price recalculation.
 
 ---
